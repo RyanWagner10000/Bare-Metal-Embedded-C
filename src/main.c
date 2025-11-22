@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include "main.h"
 
-uint32_t DELAY_COUNT = 1000000/1;
+uint32_t DELAY_COUNT = 1000000/10;
 
 /**
  * @brief Sets the bit N at address

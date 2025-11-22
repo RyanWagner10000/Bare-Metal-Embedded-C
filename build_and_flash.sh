@@ -1,6 +1,10 @@
 #!/bin/bash
 # Create a new build folder and make the project
 
+CURR_DIR=$(pwd)
+INTERFACE_CFG="$CURR_DIR/scripts/stlink.cfg"
+TARGET_CFG="$CURR_DIR/scripts/stm32f4x.cfg"
+
 function try()
 {
     [[ $- = *e* ]]; SAVED_OPT_E=$?
@@ -19,46 +23,64 @@ function catch()
     return $exception_code
 }
 
-# Clear terminal
-clear
+try
+(
+    # Clear terminal
+    clear
 
-# Remove build folder if it exists
-rm -rdf build/
+    # Remove build folder if it exists
+    rm -rdf build/
 
-# Make new build folder, but don't error if it already exists
-mkdir -p build
+    # Make new build folder, but don't error if it already exists
+    mkdir -p build
+
+    echo ""
+    echo "Cleared and remade /build directory."
+    echo ""
+)
+catch || {
+    echo "Clearing and re-making build dir was unsuccessful."
+}
 
 # cd into new build folder
-cd build
+cd build/
+
+# Try to Make CMake project in build folder
+try
+(
+    echo ""
+    echo " -- Making CMake Project -- "
+    echo ""
+    cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../cmake/arm-none-eabi-gcc.cmake ..
+)
+catch || {
+    echo "Project Making operation was unsuccessful."
+    exit 1
+}
+
+# Try to Make the project
+try
+(
+    echo ""
+    echo " -- Building CMake Project -- "
+    echo ""
+    cmake --build . -j4
+)
+catch || {
+    echo "Project Building operation was unsuccessful."
+    exit 1
+}
 
 OS_NAME=$(uname)
 
 if [ "$OS_NAME" == "Linux" ]; then
-    echo "Running on Linux."
-    
-    # Try to Make CMake project in build folder
-    try
-    (
-        cmake ..
-    )
-    catch || {
-        echo "'cmake ..' operation was unsuccessful."
-        exit 1
-    }
-
-    # Try to Make the project
-    try
-    (
-        cmake --build . -j4
-    )
-    catch || {
-        echo "'cmake --build . -j4' operation was unsuccessful."
-        exit 1
-    }
 
     try
     (
-        openocd -f ../scripts/stlink.cfg -f ../scripts/stm32f4x.cfg -c 'program firmware.elf verify reset exit'
+        echo ""
+        echo " -- Launching openOCD -- "
+        echo ""
+        openocd -f "$INTERFACE_CFG" -f "$TARGET_CFG" -c 'program firmware.elf verify reset exit'
     )
     catch || {
         echo "Launching openOCD was unsuccessful."
@@ -66,31 +88,13 @@ if [ "$OS_NAME" == "Linux" ]; then
     }
 
 elif [[ "$OS_NAME" == CYGWIN* || "$OS_NAME" == MINGW* ]]; then
-    echo "Running on Windows (Cygwin or Git Bash)."
     
-    # Try to Make CMake project in build folder
     try
     (
-        cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../cmake/arm-none-eabi-gcc.cmake ..
-    )
-    catch || {
-        echo "'cmake ..' operation was unsuccessful."
-        exit 1
-    }
-
-    # Try to Make the project
-    try
-    (
-        cmake --build . -j4
-    )
-    catch || {
-        echo "'cmake --build . -j4' operation was unsuccessful."
-        exit 1
-    }
-
-    try
-    (
-        OPENOCD_COMMAND="openocd -f ../scripts/stlink.cfg -f ../scripts/stm32f4x.cfg -c 'program firmware.elf verify reset exit'"
+        echo ""
+        echo " -- Launching openOCD -- "
+        echo ""
+        OPENOCD_COMMAND="openocd -f $INTERFACE_CFG -f $TARGET_CFG -c 'program firmware.elf verify reset exit'"
         powershell.exe -Command "Start-Process powershell -ArgumentList '-NoExit', \"& { $OPENOCD_COMMAND }\""
     )
     catch || {
@@ -102,8 +106,6 @@ else
     echo "Unknown OS: $OS_NAME"
     exit 1
 fi
-
-
 
 echo " -- DONE! -- "
 

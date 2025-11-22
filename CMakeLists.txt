@@ -18,6 +18,7 @@ target_include_directories(firmware.elf PRIVATE include include/drivers)
 
 # MCU flags
 target_compile_options(firmware.elf PRIVATE
+    -c
     -mcpu=cortex-m4
     -mthumb
     -std=gnu11
