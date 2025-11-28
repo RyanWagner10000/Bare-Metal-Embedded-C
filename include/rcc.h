@@ -11,6 +11,10 @@
 
 #include <stdint.h>
 
+#define RCC_BASE 0x40023800
+
+#define RCC ((RCC_TypeDef *)RCC_BASE)
+
 typedef struct
 {
     volatile uint32_t MODER;      // offset: 0x00

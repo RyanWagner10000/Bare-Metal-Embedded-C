@@ -11,6 +11,17 @@
 
 #include <stdint.h>
 
+#define GPIOA_BASE 0x40020000
+#define GPIOD_BASE 0x40020C00
+
+#define GPIOA ((GPIO_TypeDef *)GPIOA_BASE)
+#define GPIOD ((GPIO_TypeDef *)GPIOD_BASE)
+
+//  Bit mask for enabling GPIOD (bit 3)
+#define GPIODEN (1U << 3)
+//  Bit mask for enabling GPIOA (bit 0)
+#define GPIOAEN (1U << 0)
+
 typedef struct
 {
     volatile uint32_t MODER;   // offset: 0x00
