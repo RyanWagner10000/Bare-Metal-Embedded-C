@@ -8,6 +8,9 @@
 
 #include "usart.h"
 
+/* Provide this prototype or include your usart header */
+// extern void usartWrite(int ch); /* implement in your usart driver */
+
 static void usartWrite(int ch)
 {
     // Make sure transmit data register is empty
@@ -19,7 +22,36 @@ static void usartWrite(int ch)
     USART2->DR = (ch & 0xFF);
 }
 
-int __io_putchar(int ch)
+int puts(const char *s)
+{
+    const char *p = s;
+    while (*p) {
+        usartWrite((int)*p++);
+    }
+    /* puts appends a newline */
+    usartWrite('\n');
+    return 0;
+}
+
+/* _write is used by newlib's printf family to output bytes */
+int _write(int fd, const void *buf, unsigned int count)
+{
+    const uint8_t *cbuf = (const uint8_t *) buf;
+
+    /* fd 1 = stdout, fd 2 = stderr. Ignore fd 0 (stdin) */
+    if (fd != 1 && fd != 2) {
+        return -1;
+    }
+
+    for (unsigned int i = 0; i < count; ++i) {
+        /* block until character sent — you can adapt for DMA/IRQ if desired */
+        usartWrite(cbuf[i]);
+    }
+
+    return count;
+}
+
+int _putchar(int ch)
 {
     usartWrite(ch);
     return ch;
