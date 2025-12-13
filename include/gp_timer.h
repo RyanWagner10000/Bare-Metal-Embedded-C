@@ -20,7 +20,8 @@
 #define TIM2_SR_UIF (1U << 0)
 #define TIM2_PSC 16000
 #define TIM5_PSC 0
-#define TIM2_ARR 500
+// #define TIM2_ARR 500
+#define TIM2_ARR 10
 #define TIM5_ARR 0
 
 typedef struct

@@ -7,73 +7,8 @@
  */
 
 #include "main.h"
-#include "gp_timer.h"
 
 uint32_t DELAY_COUNT = 1000000 / 10;
-
-uint32_t LED_BS13 = (1U << 13);
-uint32_t LED_BR13 = (1U << 29);
-
-void initLED(void)
-{
-    // Enable clock access to GPIOD
-    RCC->AHB1ENR |= GPIODEN;
-
-    // Set PD13 mode to output
-    GPIOD->MODER |= (1U << 26);
-    GPIOD->MODER &= ~(1U << 27);
-
-    return;
-}
-
-void onLED(void)
-{
-    // Set PD13 High
-    GPIOD->BSRR |= LED_BS13;
-
-    return;
-}
-
-void offLED(void)
-{
-    // Set PD13 High
-    GPIOD->BSRR |= LED_BR13;
-
-    return;
-}
-
-void toggleLED(void)
-{
-    // Set output of PD13 High/Low
-    GPIOD->ODR ^= ORANGE_LED;
-
-    return;
-}
-
-void initPushButton(void)
-{
-    // Enable cloack access to GPIOC
-    RCC->AHB1ENR |= GPIOAEN;
-
-    // Set PD13 mode to output
-    GPIOA->MODER &= ~(1U << 0);
-    GPIOA->MODER &= ~(1U << 1);
-
-    return;
-}
-
-uint32_t getButtonState(void)
-{
-    // Button is active low
-
-    // Check if button is pushed
-    if (GPIOA->IDR & PUSH_BUTTON)
-    {
-        return 1;
-    }
-
-    return 0;
-}
 
 void initTIM2(void)
 {
@@ -93,40 +28,50 @@ void initTIM2(void)
     return;
 }
 
+void wait(uint32_t num_milliseconds)
+{
+    // Wait 10 milliseconds N times
+    for (uint32_t i = 0; i < num_milliseconds; ++i)
+    {
+        while (!(TIM2->SR & TIM2_SR_UIF)){}
+        TIM2->SR &= ~TIM2_SR_UIF;
+    }
+
+    return;
+}
+
 int main(void)
 {
-    initLED();
-    // initPushButton();
+    initGreenLED();
+    initOrangeLED();
+    initRedLED();
+    initBlueLED();
+    
     initTIM2();
 
-    // uint32_t button_state = getButtonState();
+    initPushButton();
 
-    // while (1)
-    // {
-    //     button_state = getButtonState();
-        
-    //     if (button_state)
-    //     {
-    //         onLED();
-    //     }
-    //     else
-    //     {
-    //         offLED();
-    //     }
-    //     // for (uint32_t volatile i = 0; i < DELAY_COUNT; i++)
-    //     // {
-    //     // }
-    // }
+    initUSART2();
+
+    uint32_t button_state = getButtonState();
 
     while (1)
     {
-        toggleLED();
+        button_state = getButtonState();
+        
+        if (button_state)
+        {
+            usart2Write('a');
+            // usart2Write('\r');
+            usart2Write('\n');
 
-        // Wait for timer to hit flag
-        while (!(TIM2->SR & TIM2_SR_UIF)){}
+            toggleLED(GREEN_LED);
+            toggleLED(ORANGE_LED);
+            toggleLED(RED_LED);
+            toggleLED(BLUE_LED);
 
-        // Reset and clear
-        TIM2->SR &= ~TIM2_SR_UIF;
+            wait(50);
+        }
     }
     
 }
