@@ -31,7 +31,8 @@ typedef struct
 } USART_TypeDef;
 
 void initUSART2(void);
-void usart2Write(uint32_t ch);
+void usartWriteChar(uint32_t value);
+void usartWriteNumber(uint32_t ch);
 uint32_t usart2Read(void);
 
 #endif // USART_H

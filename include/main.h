@@ -14,5 +14,6 @@
 #include "rcc.h"
 #include "gp_timer.h"
 #include "usart.h"
+#include "adc.h"
 
 #endif // MAIN_H

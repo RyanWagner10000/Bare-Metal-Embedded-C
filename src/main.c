@@ -33,7 +33,9 @@ void wait(uint32_t num_milliseconds)
     // Wait 10 milliseconds N times
     for (uint32_t i = 0; i < num_milliseconds; ++i)
     {
-        while (!(TIM2->SR & TIM2_SR_UIF)){}
+        while (!(TIM2->SR & TIM2_SR_UIF))
+        {
+        }
         TIM2->SR &= ~TIM2_SR_UIF;
     }
 
@@ -46,24 +48,31 @@ int main(void)
     initOrangeLED();
     initRedLED();
     initBlueLED();
-    
+
     initTIM2();
 
     initPushButton();
 
     initUSART2();
 
+    initADC();
+    startADCConversion();
+
     uint32_t button_state = getButtonState();
+    uint32_t pot_data = 0;
 
     while (1)
     {
         button_state = getButtonState();
-        
+
         if (button_state)
         {
-            usart2Write('a');
-            // usart2Write('\r');
-            usart2Write('\n');
+            pot_data = readADC();
+
+            usartWriteChar('[');
+            usartWriteNumber(pot_data);
+            usartWriteChar(']');
+            usartWriteChar('\n');
 
             toggleLED(GREEN_LED);
             toggleLED(ORANGE_LED);
@@ -73,5 +82,4 @@ int main(void)
             wait(50);
         }
     }
-    
 }
