@@ -85,7 +85,7 @@ void toggleLED(uint32_t led)
 
 void initPushButton(void)
 {
-    // Enable cloack access to GPIOC
+    // Enable cloack access to GPIOA
     RCC->AHB1ENR |= GPIOAEN;
 
     // Set PA0 mode to input
