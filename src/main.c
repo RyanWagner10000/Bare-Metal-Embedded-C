@@ -9,6 +9,9 @@
 #include "main.h"
 
 uint32_t DELAY_COUNT = 1000000 / 10;
+uint8_t data_buffer[6];
+
+int16_t accel_x, accel_y, accel_z;
 
 void initTIM2(void)
 {
@@ -55,11 +58,10 @@ int main(void)
 
     initUSART2();
 
-    initADC();
-    startADCConversion();
+    initSPI();
+    initICM20948();
 
     uint32_t button_state = getButtonState();
-    uint32_t pot_data = 0;
 
     while (1)
     {
@@ -67,19 +69,46 @@ int main(void)
 
         if (button_state)
         {
-            pot_data = readADC();
+
+            toggleLED(GREEN_LED);
+            
+            // Read accelerometer data starting from data start
+            readAccel(ACCEL_DATA, data_buffer);
+            // readAccel(GYRO_DATA, data_buffer);
+
+            toggleLED(RED_LED);
+
+            // Combine high and low bytes to form data
+            accel_x = (int16_t) ((data_buffer[1] << 8) | data_buffer[0]);
+            accel_y = (int16_t) ((data_buffer[3] << 8) | data_buffer[2]);
+            accel_z = (int16_t) ((data_buffer[5] << 8) | data_buffer[4]);
+
+            toggleLED(ORANGE_LED);
 
             usartWriteChar('[');
-            usartWriteNumber(pot_data);
+            usartWriteChar('x');
+            usartWriteChar('=');
+            usartWriteNumber(accel_x);
+            usartWriteChar(' ');
+            usartWriteChar('|');
+            usartWriteChar(' ');
+
+            usartWriteChar('y');
+            usartWriteChar('=');
+            usartWriteNumber(accel_y);
+            usartWriteChar(' ');
+            usartWriteChar('|');
+            usartWriteChar(' ');
+            
+            usartWriteChar('z');
+            usartWriteChar('=');
+            usartWriteNumber(accel_z);
             usartWriteChar(']');
             usartWriteChar('\n');
 
-            toggleLED(GREEN_LED);
-            toggleLED(ORANGE_LED);
-            toggleLED(RED_LED);
             toggleLED(BLUE_LED);
 
-            wait(50);
+            wait(5);
         }
     }
 }

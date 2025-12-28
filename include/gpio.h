@@ -13,9 +13,13 @@
 #include "rcc.h"
 
 #define GPIOA_BASE 0x40020000
+#define GPIOB_BASE 0x40020400
+#define GPIOC_BASE 0x40020800
 #define GPIOD_BASE 0x40020C00
 
 #define GPIOAEN (1U << 0)
+#define GPIOBEN (1U << 1)
+#define GPIOCEN (1U << 2)
 #define GPIODEN (1U << 3)
 
 #define GREEN_LED (1U << 12)
@@ -25,6 +29,8 @@
 #define PUSH_BUTTON (1U << 0)
 
 #define GPIOA ((GPIO_TypeDef *)GPIOA_BASE)
+#define GPIOB ((GPIO_TypeDef *)GPIOB_BASE)
+#define GPIOC ((GPIO_TypeDef *)GPIOC_BASE)
 #define GPIOD ((GPIO_TypeDef *)GPIOD_BASE)
 
 typedef struct

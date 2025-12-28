@@ -15,5 +15,7 @@
 #include "gp_timer.h"
 #include "usart.h"
 #include "adc.h"
+#include "spi.h"
+#include "ICM20948.h"
 
 #endif // MAIN_H

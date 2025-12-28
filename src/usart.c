@@ -46,7 +46,7 @@ void initUSART2(void)
     return;
 }
 
-void usartWriteChar(uint32_t value)
+void usartWriteChar(uint8_t value)
 {
     // Make sure the transmit data register is NOT empty
     while (!(USART2->SR & (1U << 7)))
@@ -62,7 +62,7 @@ void usartWriteChar(uint32_t value)
     return;
 }
 
-void usartWriteNumber(uint32_t value)
+void usartWriteNumber(int16_t value)
 {
     char buffer[12];  // Max 10 digits for uint32_t + null terminator + 1 extra
     int i = 0;
