@@ -45,8 +45,11 @@ void wait(uint32_t num_milliseconds)
     return;
 }
 
-int main(void)
+void init_peripherals(void)
 {
+    enable_faults();
+    enable_fpu();
+
     initGreenLED();
     initOrangeLED();
     initRedLED();
@@ -61,6 +64,13 @@ int main(void)
     initSPI();
     initICM20948();
 
+    return;
+}
+
+int main(void)
+{
+    init_peripherals();
+
     uint32_t button_state = getButtonState();
 
     while (1)
@@ -70,45 +80,42 @@ int main(void)
         if (button_state)
         {
 
-            toggleLED(GREEN_LED);
-            
             // Read accelerometer data starting from data start
             readAccel(ACCEL_DATA, data_buffer);
             // readAccel(GYRO_DATA, data_buffer);
-
-            toggleLED(RED_LED);
 
             // Combine high and low bytes to form data
             accel_x = (int16_t) ((data_buffer[1] << 8) | data_buffer[0]);
             accel_y = (int16_t) ((data_buffer[3] << 8) | data_buffer[2]);
             accel_z = (int16_t) ((data_buffer[5] << 8) | data_buffer[4]);
 
+            char accel_x_str[MAX_FLOAT_STRING];
+            char accel_y_str[MAX_FLOAT_STRING];
+            char accel_z_str[MAX_FLOAT_STRING];
+            int afterpoint = 2;
+            float_to_string(accel_x, accel_x_str, afterpoint);
+            float_to_string(accel_y, accel_y_str, afterpoint);
+            float_to_string(accel_z, accel_z_str, afterpoint);
+
+            char concat_x[MAX_STRING_CONCAT];
+            str_concat("Accel x: ", accel_x_str, concat_x);
+            str_concat(concat_x, "\n", concat_x);
+
+            char concat_y[MAX_STRING_CONCAT];
+            str_concat("Accel x: ", accel_x_str, concat_y);
+            str_concat(concat_y, "\n", concat_y);
+
+            char concat_z[MAX_STRING_CONCAT];
+            str_concat("Accel x: ", accel_x_str, concat_z);
+            str_concat(concat_z, "\n", concat_z);
+
+            usartWriteString(concat_x);
+            usartWriteString(concat_y);
+            usartWriteString(concat_z);
+
             toggleLED(ORANGE_LED);
 
-            usartWriteChar('[');
-            usartWriteChar('x');
-            usartWriteChar('=');
-            usartWriteNumber(accel_x);
-            usartWriteChar(' ');
-            usartWriteChar('|');
-            usartWriteChar(' ');
-
-            usartWriteChar('y');
-            usartWriteChar('=');
-            usartWriteNumber(accel_y);
-            usartWriteChar(' ');
-            usartWriteChar('|');
-            usartWriteChar(' ');
-            
-            usartWriteChar('z');
-            usartWriteChar('=');
-            usartWriteNumber(accel_z);
-            usartWriteChar(']');
-            usartWriteChar('\n');
-
-            toggleLED(BLUE_LED);
-
-            wait(5);
+            wait(10);
         }
     }
 }

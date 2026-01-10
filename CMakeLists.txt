@@ -16,15 +16,25 @@ add_executable(firmware.elf ${SRC_FILES})
 
 target_include_directories(firmware.elf PRIVATE include include/drivers)
 
-# MCU flags
+# MCU flags - put EVERYTHING here for the target
 target_compile_options(firmware.elf PRIVATE
-    -c
     -mcpu=cortex-m4
     -mthumb
+    -mfpu=fpv4-sp-d16       # ← Add this!
+    -mfloat-abi=hard        # ← Add this!
     -std=gnu11
+    -Wall
+    -Wextra
 )
 
 target_link_options(firmware.elf PRIVATE
     -T${CMAKE_SOURCE_DIR}/linker/stm32_ls.ld
+    -mcpu=cortex-m4
+    -mthumb
+    -mfpu=fpv4-sp-d16       # ← Add this!
+    -mfloat-abi=hard        # ← Add this!
     -nostdlib
+    --specs=nosys.specs     # ← Good to add this too
 )
+
+target_link_libraries(firmware.elf gcc m)  # ← Add 'm' for math library

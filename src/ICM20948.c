@@ -16,10 +16,10 @@ void readAccel(uint8_t address, uint8_t *data)
     // Enable communication by pulling line low
     enableCS();
 
-    // Send communication to recieve x-axis acceleromter data
+    // Send communication to recieve acceleromter data
     transmitSPI(&address, 1);
 
-    // Receive low x-axis acceleromter data
+    // Receive acceleromter data
     receiveSPI(data, 6);
 
     // Disable communication by pulling line high

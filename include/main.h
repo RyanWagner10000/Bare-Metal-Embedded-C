@@ -17,5 +17,6 @@
 #include "adc.h"
 #include "spi.h"
 #include "ICM20948.h"
+#include "fpu.h"
 
 #endif // MAIN_H
