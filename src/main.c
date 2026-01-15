@@ -11,7 +11,7 @@
 uint32_t DELAY_COUNT = 1000000 / 10;
 uint8_t data_buffer[6];
 
-int16_t accel_x, accel_y, accel_z;
+int16_t value_x, value_y, value_z;
 
 void initTIM2(void)
 {
@@ -45,7 +45,7 @@ void wait(uint32_t num_milliseconds)
     return;
 }
 
-void init_peripherals(void)
+void initPeripherals(void)
 {
     enable_faults();
     enable_fpu();
@@ -59,63 +59,80 @@ void init_peripherals(void)
 
     initPushButton();
 
+    toggleLED(GREEN_LED);
+    for (uint32_t i = 0; i < 1000000; i++);
+
     initUSART2();
 
     initSPI();
-    initICM20948();
+    uint8_t whoami = initICM20948();
+
+    char temp[MAX_FLOAT_STRING];
+    int_to_str((int32_t)whoami, temp);
+    char concat[MAX_STRING_CONCAT];
+    str_concat("Module name: ", temp, concat);
+    str_concat(concat, "\n", concat);
+
+    usartWriteString(concat);
+
+    toggleLED(GREEN_LED);
+    for (uint32_t i = 0; i < 1000000; i++);
 
     return;
 }
 
 int main(void)
 {
-    init_peripherals();
+    initPeripherals();
 
     uint32_t button_state = getButtonState();
+    uint8_t run = 0;
 
     while (1)
     {
         button_state = getButtonState();
-
         if (button_state)
         {
+            run ++;
+            run %= 2;
+            wait(100);
+        }
 
+        if (run)
+        {
             // Read accelerometer data starting from data start
             readAccel(ACCEL_DATA, data_buffer);
-            // readAccel(GYRO_DATA, data_buffer);
+            // readGyro(GYRO_DATA, data_buffer);
 
             // Combine high and low bytes to form data
-            accel_x = (int16_t) ((data_buffer[1] << 8) | data_buffer[0]);
-            accel_y = (int16_t) ((data_buffer[3] << 8) | data_buffer[2]);
-            accel_z = (int16_t) ((data_buffer[5] << 8) | data_buffer[4]);
+            value_x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
+            value_y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
+            value_z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
 
-            char accel_x_str[MAX_FLOAT_STRING];
-            char accel_y_str[MAX_FLOAT_STRING];
-            char accel_z_str[MAX_FLOAT_STRING];
-            int afterpoint = 2;
-            float_to_string(accel_x, accel_x_str, afterpoint);
-            float_to_string(accel_y, accel_y_str, afterpoint);
-            float_to_string(accel_z, accel_z_str, afterpoint);
+            char x_str[MAX_FLOAT_STRING];
+            char y_str[MAX_FLOAT_STRING];
+            char z_str[MAX_FLOAT_STRING];
 
-            char concat_x[MAX_STRING_CONCAT];
-            str_concat("Accel x: ", accel_x_str, concat_x);
-            str_concat(concat_x, "\n", concat_x);
+            // int afterpoint = 1;
+            int_to_str((int32_t)value_x, x_str);
+            int_to_str((int32_t)value_y, y_str);
+            int_to_str((int32_t)value_z, z_str);
 
-            char concat_y[MAX_STRING_CONCAT];
-            str_concat("Accel x: ", accel_x_str, concat_y);
-            str_concat(concat_y, "\n", concat_y);
+            char concat[MAX_STRING_CONCAT];
+            str_concat("Value x: ", x_str, concat);
+            str_concat(concat, " | ", concat);
+            
+            str_concat(concat, "Value y: ", concat);
+            str_concat(concat, y_str, concat);
+            str_concat(concat, " | ", concat);
 
-            char concat_z[MAX_STRING_CONCAT];
-            str_concat("Accel x: ", accel_x_str, concat_z);
-            str_concat(concat_z, "\n", concat_z);
+            str_concat(concat, "Value z: ", concat);
+            str_concat(concat, z_str, concat);
+            str_concat(concat, "\n", concat);
 
-            usartWriteString(concat_x);
-            usartWriteString(concat_y);
-            usartWriteString(concat_z);
+            usartWriteString(concat);
 
             toggleLED(ORANGE_LED);
-
-            wait(10);
         }
     }
 }

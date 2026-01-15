@@ -15,6 +15,7 @@
 #define RESET_REGISTER (0x00)
 #define ID (0xEA)
 #define READ_OPERATION (0x80)
+#define MULTI_BYTE_ENABLE (0x40)
 
 #define USER_CTRL (0x03)
 #define PWR_MGMT_1 (0x06)
@@ -26,10 +27,12 @@
 #define ACCEL_CONFIG (0x14)
 #define ACCEL_CONFIG2 (0x15)
 
-void initICM20948(void);
+// void initICM20948(void);
+uint8_t initICM20948(void);
 
 void readAccel(uint8_t address, uint8_t *data);
 void readGyro(uint8_t address, uint8_t *data);
-void write_ism20948(uint8_t address, uint8_t value);
+void writeIsm20948(uint8_t address, uint8_t value);
+uint8_t readRegister(uint8_t address);
 
 #endif // ICM20948_H

@@ -13,6 +13,8 @@ void readAccel(uint8_t address, uint8_t *data)
     // Set read operation
     address |= READ_OPERATION;
 
+    // address |= MULTI_BYTE_ENABLE;
+
     // Enable communication by pulling line low
     enableCS();
 
@@ -24,7 +26,7 @@ void readAccel(uint8_t address, uint8_t *data)
 
     // Disable communication by pulling line high
     disableCS();
-    
+
     return;
 }
 
@@ -32,6 +34,8 @@ void readGyro(uint8_t address, uint8_t *data)
 {
     // Set read operation
     address |= READ_OPERATION;
+
+    // address |= MULTI_BYTE_ENABLE;
 
     // Enable communication by pulling line low
     enableCS();
@@ -44,11 +48,11 @@ void readGyro(uint8_t address, uint8_t *data)
 
     // Disable communication by pulling line high
     disableCS();
-    
+
     return;
 }
 
-void write_ism20948(uint8_t address, uint8_t value)
+void writeIsm20948(uint8_t address, uint8_t value)
 {
     uint8_t data[2];
 
@@ -68,27 +72,49 @@ void write_ism20948(uint8_t address, uint8_t value)
     disableCS();
 }
 
-void initICM20948(void)
+uint8_t readRegister(uint8_t address)
+{
+    uint8_t data;
+    
+    address |= READ_OPERATION;
+    
+    enableCS();
+    transmitSPI(&address, 1);
+    receiveSPI(&data, 1);
+    disableCS();
+    
+    return data;
+}
+
+uint8_t initICM20948(void)
 {
     // Initialize SPI1 interface
     initSPI();
 
     // Set any options on the ICM 20948
-    write_ism20948(PWR_MGMT_1, 0x06);
+    writeIsm20948(PWR_MGMT_1, 0x06);
 
     // Enable accelerometer and gyroscope
-    write_ism20948(PWR_MGMT_2, 0x00);
+    writeIsm20948(PWR_MGMT_2, 0x00);
 
     // Change block to 2
-    write_ism20948(REG_BANK_SEL, 0x20);
+    writeIsm20948(REG_BANK_SEL, 0x20);
 
     // Enable LPF for accelerometer
-    write_ism20948(ACCEL_CONFIG, 0x02);
+    writeIsm20948(ACCEL_CONFIG, 0x02);
+    // writeIsm20948(ACCEL_CONFIG, 0x06);
     // Enable decimation of 32 samples
-    write_ism20948(ACCEL_CONFIG2, 0x03);
+    writeIsm20948(ACCEL_CONFIG2, 0x03);
 
     // Change block to 0
-    write_ism20948(REG_BANK_SEL, 0x00);
+    writeIsm20948(REG_BANK_SEL, 0x00);
 
-    return;
+    writeIsm20948(REG_BANK_SEL, 0x00);  // Bank 0
+    for (uint32_t i = 0; i < 100000; i++);
+
+    uint8_t whoami = readRegister(0x00);
+    // whoami should be 0xEA (234 decimal)
+    // You can print this or set a breakpoint to check
+
+    return whoami;
 }
