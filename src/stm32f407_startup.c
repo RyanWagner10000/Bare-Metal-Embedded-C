@@ -39,72 +39,18 @@ uint32_t vector_tbl[] __attribute__((section(".isr_vector_tbl"))) = {
 
 void HardFault_Handler(void)
 {
-    volatile uint32_t cfsr = *((volatile uint32_t *)0xE000ED28);
-    volatile uint32_t hfsr = *((volatile uint32_t *)0xE000ED2C);
-
-    initOrangeLED();
-    initGreenLED(); // Use two LEDs
-    initBlueLED();
     initRedLED();
-    onLED(RED_LED);
-
     while (1)
     {
-        // Blink out CFSR value in groups of 4 bits (hex digits)
-        for (int digit = 7; digit >= 0; digit--) // 8 hex digits
-        {
-            uint32_t nibble = (cfsr >> (digit * 4)) & 0xF;
-            toggleLED(BLUE_LED);
-            toggleLED(RED_LED);
-            for (uint32_t j = 0; j < 200000; j++)
-                ;
-
-            // Blink the nibble value
-            for (uint32_t i = 0; i < nibble; i++)
-            {
-                onLED(ORANGE_LED);
-                for (uint32_t j = 0; j < 200000; j++)
-                    ;
-                offLED(ORANGE_LED);
-                for (uint32_t j = 0; j < 200000; j++)
-                    ;
-            }
-
-            // Long pause between nibbles
-            for (uint32_t i = 0; i < 1000000; i++)
-                ;
-        }
-
-        // Very long pause, then blink green to show HFSR
-        onLED(GREEN_LED);
-        for (uint32_t i = 0; i < 2000000; i++)
-            ;
-        offLED(GREEN_LED);
-
-        uint32_t hfsr_bit30 = (hfsr >> 30) & 0x1;
-        if (hfsr_bit30)
-        {
-            // Forced fault - blink green rapidly
-            for (int i = 0; i < 10; i++)
-            {
-                onLED(GREEN_LED);
-                for (uint32_t j = 0; j < 200000; j++)
-                    ;
-                offLED(GREEN_LED);
-                for (uint32_t j = 0; j < 200000; j++)
-                    ;
-            }
-        }
-
-        // Super long pause before repeating
-        for (uint32_t i = 0; i < 5000000; i++)
+        toggleLED(RED_LED);
+        for (uint32_t i = 0; i < 500000; i++)
             ;
     }
 }
 
 void BusFault_Handler(void)
 {
-    initRedLED(); // Different color!
+    initRedLED();
     while (1)
     {
         toggleLED(RED_LED);
@@ -115,11 +61,11 @@ void BusFault_Handler(void)
 
 void UsageFault_Handler(void)
 {
-    initRedLED(); // Different color to distinguish it
+    initRedLED();
     while (1)
     {
         toggleLED(RED_LED);
-        for (uint32_t i = 0; i < 1000000; i++)
+        for (uint32_t i = 0; i < 500000; i++)
             ;
     }
 }

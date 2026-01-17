@@ -20,8 +20,8 @@ target_include_directories(firmware.elf PRIVATE include include/drivers)
 target_compile_options(firmware.elf PRIVATE
     -mcpu=cortex-m4
     -mthumb
-    -mfpu=fpv4-sp-d16       # ← Add this!
-    -mfloat-abi=hard        # ← Add this!
+    -mfpu=fpv4-sp-d16
+    -mfloat-abi=hard
     -std=gnu11
     -Wall
     -Wextra
@@ -31,10 +31,10 @@ target_link_options(firmware.elf PRIVATE
     -T${CMAKE_SOURCE_DIR}/linker/stm32_ls.ld
     -mcpu=cortex-m4
     -mthumb
-    -mfpu=fpv4-sp-d16       # ← Add this!
-    -mfloat-abi=hard        # ← Add this!
+    -mfpu=fpv4-sp-d16
+    -mfloat-abi=hard
     -nostdlib
-    --specs=nosys.specs     # ← Good to add this too
+    --specs=nosys.specs
 )
 
-target_link_libraries(firmware.elf gcc m)  # ← Add 'm' for math library
+target_link_libraries(firmware.elf gcc m)

@@ -71,7 +71,7 @@ void initSPI(void)
     return;
 }
 
-void transmitSPI(uint8_t *data, uint32_t size)
+void transmitSPI(uint8_t *address, uint32_t size)
 {
     uint32_t i = 0;
     uint8_t temp;
@@ -83,7 +83,7 @@ void transmitSPI(uint8_t *data, uint32_t size)
             ;
 
         // Write data to register
-        SPI1->DR = data[i];
+        SPI1->DR = address[i];
         i++;
     }
 
@@ -103,7 +103,7 @@ void transmitSPI(uint8_t *data, uint32_t size)
     return;
 }
 
-void receiveSPI(uint8_t *data, uint32_t size)
+void receiveSPI(uint8_t *address, uint32_t size)
 {
     while (size)
     {
@@ -118,7 +118,7 @@ void receiveSPI(uint8_t *data, uint32_t size)
         while (!(SPI1->SR & (1U << 0)));
 
         // Read data from register
-        *data++ = (SPI1->DR);
+        *address++ = (SPI1->DR);
         size--;
     }
     return;

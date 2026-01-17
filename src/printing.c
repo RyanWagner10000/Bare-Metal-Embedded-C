@@ -70,15 +70,15 @@ void reverse(char *str, uint32_t len)
 // Returns the length of the string
 uint32_t int_to_str(int32_t n, char *buffer)
 {
-    uint32_t i = 0;
+    uint32_t length = 0;
     uint32_t is_neg = 0;
     uint32_t num; // Use unsigned for the actual conversion
 
     if (n == 0)
     {
-        buffer[i++] = '0';
-        buffer[i] = '\0';
-        return i;
+        buffer[length++] = '0';
+        buffer[length] = '\0';
+        return length;
     }
 
     if (n < 0)
@@ -94,24 +94,24 @@ uint32_t int_to_str(int32_t n, char *buffer)
     while (num != 0)
     {
         uint32_t rem = num % 10;
-        buffer[i++] = rem + '0';
+        buffer[length++] = rem + '0';
         num = num / 10;
     }
 
     if (is_neg)
     {
-        buffer[i++] = '-';
+        buffer[length++] = '-';
     }
 
-    buffer[i] = '\0';
-    reverse(buffer, i);
+    buffer[length] = '\0';
+    reverse(buffer, length);
 
-    return i;
+    return length;
 }
 
 // Converts a float to a string in char array res[]
 // afterpoint: number of digits to consider after the decimal point
-void float_to_string(float n, char *res, uint32_t afterpoint)
+void float_to_str(float n, char *res, uint32_t afterpoint)
 {
     afterpoint++;
 

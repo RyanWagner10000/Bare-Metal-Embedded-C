@@ -9,9 +9,6 @@
 #include "main.h"
 
 uint32_t DELAY_COUNT = 1000000 / 10;
-uint8_t data_buffer[6];
-
-int16_t value_x, value_y, value_z;
 
 void initTIM2(void)
 {
@@ -59,78 +56,174 @@ void initPeripherals(void)
 
     initPushButton();
 
-    toggleLED(GREEN_LED);
-    for (uint32_t i = 0; i < 1000000; i++);
-
     initUSART2();
 
     initSPI();
-    uint8_t whoami = initICM20948();
 
-    char temp[MAX_FLOAT_STRING];
-    int_to_str((int32_t)whoami, temp);
+    initICM20948();
+
+    return;
+}
+
+void update_avg(Moving_Avg_Typedef *avg, int32_t value)
+{
+    // Get previous index
+    uint32_t previous_idx = (avg->pos - 1 + avg->length) % avg->length;
+
+    // Subtract oldest value
+    avg->sum -= avg->buffer[previous_idx];
+    // Add new value
+    avg->sum += value;
+
+    // Update buffer that holds all values
+    avg->buffer[avg->pos] = value;
+
+    // Update current buffer index
+    avg->pos++;
+    avg->pos %= avg->length;
+
+    avg->avg = avg->sum / (float)avg->length;
+
+    return;
+}
+
+void init_moving_average(Moving_Avg_Typedef *avg, uint8_t size)
+{
+    // Set everything to 0 to it's filled and ready to use
+    avg->length = (uint32_t)size;
+    avg->avg = 0;
+    avg->pos = 0;
+    avg->sum = 0;
+
+    for (uint8_t i = 0; i < size; i++)
+    {
+        avg->buffer[i] = 0;
+    }
+
+    return;
+}
+
+void logAccelData(Moving_Avg_Typedef *avg_x, Moving_Avg_Typedef *avg_y, Moving_Avg_Typedef *avg_z)
+{
+    char x_str[MAX_FLOAT_STRING];
+    char y_str[MAX_FLOAT_STRING];
+    char z_str[MAX_FLOAT_STRING];
+    uint8_t accel_data_buffer[6] = {0, 0, 0, 0, 0, 0};
+    int16_t accel_x, accel_y, accel_z;
+
+    // Read accelerometer data starting from data start
+    getXYZ(ACCEL_DATA, accel_data_buffer);
+
+    // Combine high and low bytes to form data
+    accel_x = (int16_t)((accel_data_buffer[0] << 8) | accel_data_buffer[1]);
+    accel_y = (int16_t)((accel_data_buffer[2] << 8) | accel_data_buffer[3]);
+    accel_z = (int16_t)((accel_data_buffer[4] << 8) | accel_data_buffer[5]);
+
+    update_avg(avg_x, (int32_t)accel_x);
+    update_avg(avg_y, (int32_t)accel_y);
+    update_avg(avg_z, (int32_t)accel_z);
+
+    float_to_str(avg_x->avg, x_str, 2);
+    float_to_str(avg_y->avg, y_str, 2);
+    float_to_str(avg_z->avg, z_str, 2);
+
     char concat[MAX_STRING_CONCAT];
-    str_concat("Module name: ", temp, concat);
+    str_concat("Accel x: ", x_str, concat);
+    str_concat(concat, " | ", concat);
+
+    str_concat(concat, "Accel y: ", concat);
+    str_concat(concat, y_str, concat);
+    str_concat(concat, " | ", concat);
+
+    str_concat(concat, "Accel z: ", concat);
+    str_concat(concat, z_str, concat);
     str_concat(concat, "\n", concat);
 
     usartWriteString(concat);
+}
 
-    toggleLED(GREEN_LED);
-    for (uint32_t i = 0; i < 1000000; i++);
+void logGyroData(Moving_Avg_Typedef *avg_x, Moving_Avg_Typedef *avg_y, Moving_Avg_Typedef *avg_z)
+{
+    char x_str[MAX_FLOAT_STRING];
+    char y_str[MAX_FLOAT_STRING];
+    char z_str[MAX_FLOAT_STRING];
+    uint8_t gyro_data_buffer[6];
+    int16_t gyro_x, gyro_y, gyro_z;
 
-    return;
+    // Read accelerometer data starting from data start
+    getXYZ(GYRO_DATA, gyro_data_buffer);
+
+    // Combine high and low bytes to form data
+    gyro_x = (int16_t)((gyro_data_buffer[0] << 8) | gyro_data_buffer[1]);
+    gyro_y = (int16_t)((gyro_data_buffer[2] << 8) | gyro_data_buffer[3]);
+    gyro_z = (int16_t)((gyro_data_buffer[4] << 8) | gyro_data_buffer[5]);
+
+    update_avg(avg_x, (int32_t)gyro_x);
+    update_avg(avg_y, (int32_t)gyro_y);
+    update_avg(avg_z, (int32_t)gyro_z);
+
+    float_to_str(avg_x->avg, x_str, 2);
+    float_to_str(avg_y->avg, y_str, 2);
+    float_to_str(avg_z->avg, z_str, 2);
+
+    char concat[MAX_STRING_CONCAT];
+    str_concat("Deg x: ", x_str, concat);
+    str_concat(concat, " | ", concat);
+
+    str_concat(concat, "Deg y: ", concat);
+    str_concat(concat, y_str, concat);
+    str_concat(concat, " | ", concat);
+
+    str_concat(concat, "Deg z: ", concat);
+    str_concat(concat, z_str, concat);
+    str_concat(concat, "\n", concat);
+
+    usartWriteString(concat);
 }
 
 int main(void)
 {
     initPeripherals();
 
+    toggleLED(BLUE_LED);
+
     uint32_t button_state = getButtonState();
     uint8_t run = 0;
+
+    // Accelerometer data
+    Moving_Avg_Typedef accel_avg_x;
+    init_moving_average(&accel_avg_x, 50);
+    Moving_Avg_Typedef accel_avg_y;
+    init_moving_average(&accel_avg_y, 50);
+    Moving_Avg_Typedef accel_avg_z;
+    init_moving_average(&accel_avg_z, 50);
+
+    // Gyroscope data
+    Moving_Avg_Typedef gyro_avg_x;
+    init_moving_average(&gyro_avg_x, 50);
+    Moving_Avg_Typedef gyro_avg_y;
+    init_moving_average(&gyro_avg_y, 50);
+    Moving_Avg_Typedef gyro_avg_z;
+    init_moving_average(&gyro_avg_z, 50);
 
     while (1)
     {
         button_state = getButtonState();
         if (button_state)
         {
-            run ++;
+            run++;
             run %= 2;
+            offLED(ORANGE_LED);
             wait(100);
         }
 
         if (run)
         {
-            // Read accelerometer data starting from data start
-            readAccel(ACCEL_DATA, data_buffer);
-            // readGyro(GYRO_DATA, data_buffer);
+            // Read and print accelerometer data
+            // logAccelData(&accel_avg_x, &accel_avg_y, &accel_avg_z);
 
-            // Combine high and low bytes to form data
-            value_x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
-            value_y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
-            value_z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
-
-            char x_str[MAX_FLOAT_STRING];
-            char y_str[MAX_FLOAT_STRING];
-            char z_str[MAX_FLOAT_STRING];
-
-            // int afterpoint = 1;
-            int_to_str((int32_t)value_x, x_str);
-            int_to_str((int32_t)value_y, y_str);
-            int_to_str((int32_t)value_z, z_str);
-
-            char concat[MAX_STRING_CONCAT];
-            str_concat("Value x: ", x_str, concat);
-            str_concat(concat, " | ", concat);
-            
-            str_concat(concat, "Value y: ", concat);
-            str_concat(concat, y_str, concat);
-            str_concat(concat, " | ", concat);
-
-            str_concat(concat, "Value z: ", concat);
-            str_concat(concat, z_str, concat);
-            str_concat(concat, "\n", concat);
-
-            usartWriteString(concat);
+            // Read and print gyroscope data
+            logGyroData(&gyro_avg_x, &gyro_avg_y, &gyro_avg_z);
 
             toggleLED(ORANGE_LED);
         }

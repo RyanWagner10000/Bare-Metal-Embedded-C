@@ -6,51 +6,7 @@
  * notes:
  */
 
-#include <ICM20948.h>
-
-void readAccel(uint8_t address, uint8_t *data)
-{
-    // Set read operation
-    address |= READ_OPERATION;
-
-    // address |= MULTI_BYTE_ENABLE;
-
-    // Enable communication by pulling line low
-    enableCS();
-
-    // Send communication to recieve acceleromter data
-    transmitSPI(&address, 1);
-
-    // Receive acceleromter data
-    receiveSPI(data, 6);
-
-    // Disable communication by pulling line high
-    disableCS();
-
-    return;
-}
-
-void readGyro(uint8_t address, uint8_t *data)
-{
-    // Set read operation
-    address |= READ_OPERATION;
-
-    // address |= MULTI_BYTE_ENABLE;
-
-    // Enable communication by pulling line low
-    enableCS();
-
-    // Send communication to recieve x-axis acceleromter data
-    transmitSPI(&address, 1);
-
-    // Receive low x-axis acceleromter data
-    receiveSPI(data, 6);
-
-    // Disable communication by pulling line high
-    disableCS();
-
-    return;
-}
+#include "ICM20948.h"
 
 void writeIsm20948(uint8_t address, uint8_t value)
 {
@@ -75,15 +31,53 @@ void writeIsm20948(uint8_t address, uint8_t value)
 uint8_t readRegister(uint8_t address)
 {
     uint8_t data;
-    
+
     address |= READ_OPERATION;
-    
+
     enableCS();
     transmitSPI(&address, 1);
     receiveSPI(&data, 1);
     disableCS();
-    
+
     return data;
+}
+
+void printRegister(uint8_t address)
+{
+    uint8_t data = readRegister(address);
+
+    char data_str[MAX_FLOAT_STRING];
+    char addr_str[MAX_FLOAT_STRING];
+    char concat[MAX_STRING_CONCAT];
+    int_to_str((int32_t)data, data_str);
+    int_to_str((int32_t)address, addr_str);
+    str_concat("Register ", addr_str, concat);
+    str_concat(concat, " = ", concat);
+    str_concat(concat, data_str, concat);
+    str_concat(concat, "\n", concat);
+    usartWriteString(concat);
+
+    return;
+}
+
+void getXYZ(uint8_t address, uint8_t *data)
+{
+    // Enable communication by pulling line low
+    enableCS();
+
+    // Set read operation
+    address |= READ_OPERATION;
+
+    // Send communication to recieve acceleromter data
+    transmitSPI(&address, 1);
+
+    // Receive acceleromter data
+    receiveSPI(data, 6);
+
+    // Disable communication by pulling line high
+    disableCS();
+
+    return;
 }
 
 uint8_t initICM20948(void)
@@ -93,28 +87,46 @@ uint8_t initICM20948(void)
 
     // Set any options on the ICM 20948
     writeIsm20948(PWR_MGMT_1, 0x06);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
 
     // Enable accelerometer and gyroscope
     writeIsm20948(PWR_MGMT_2, 0x00);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
 
-    // Change block to 2
+    // Change bank to 2
     writeIsm20948(REG_BANK_SEL, 0x20);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
 
     // Enable LPF for accelerometer
     writeIsm20948(ACCEL_CONFIG, 0x02);
-    // writeIsm20948(ACCEL_CONFIG, 0x06);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
+
     // Enable decimation of 32 samples
     writeIsm20948(ACCEL_CONFIG2, 0x03);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
 
-    // Change block to 0
+    // Enable digital low pass filter
+    writeIsm20948(GYRO_CONFIG1, 0x03);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
+
+    // Enable 8x averaging for gyroscope
+    writeIsm20948(GYRO_CONFIG2, 0x03);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
+
+    // Change bank to 0
     writeIsm20948(REG_BANK_SEL, 0x00);
+    for (uint32_t i = 0; i < 100; i++)
+        ;
 
-    writeIsm20948(REG_BANK_SEL, 0x00);  // Bank 0
-    for (uint32_t i = 0; i < 100000; i++);
-
-    uint8_t whoami = readRegister(0x00);
     // whoami should be 0xEA (234 decimal)
-    // You can print this or set a breakpoint to check
+    uint8_t whoami = readRegister(0x00);
 
     return whoami;
 }

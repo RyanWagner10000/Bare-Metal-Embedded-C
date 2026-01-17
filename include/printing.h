@@ -16,7 +16,7 @@
 
 uint32_t get_string_length(const char *s);
 uint32_t int_to_str(int32_t n, char *buffer);
-void float_to_string(float n, char *res, uint32_t afterpoint);
+void float_to_str(float n, char *res, uint32_t afterpoint);
 void str_concat(char *str1, char *str2, char *concat);
 
 #endif // PRINTING_H
