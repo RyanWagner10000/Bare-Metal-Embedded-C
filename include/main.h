@@ -17,5 +17,17 @@
 #include "adc.h"
 #include "spi.h"
 #include "ICM20948.h"
+#include "fpu.h"
+
+#define MAX_BUFFER_SIZE (100)
+
+typedef struct
+{
+    int32_t sum;
+    float avg;
+    uint32_t pos;
+    uint32_t buffer[MAX_BUFFER_SIZE];
+    uint32_t length;
+} Moving_Avg_Typedef;
 
 #endif // MAIN_H

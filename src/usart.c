@@ -46,12 +46,35 @@ void initUSART2(void)
     return;
 }
 
+void usartWriteString(const char *string)
+{
+    int32_t str_len = get_string_length(string);
+    char char_i = 0;
+
+    for (int32_t i = 0; i < str_len; i++)
+    {
+        // Make sure the transmit data register is NOT empty
+        while (!(USART2->SR & (1U << 7)))
+            ;
+
+        // Get first byte of of input
+        char_i = string[i];
+        USART2->DR = (char_i & 0xFF);
+
+        // Wait until done transmitting
+        while (!(USART2->SR & (1U << 6)))
+            ;
+    }
+
+    return;
+}
+
 void usartWriteChar(uint8_t value)
 {
     // Make sure the transmit data register is NOT empty
     while (!(USART2->SR & (1U << 7)))
         ;
-    
+
     // Get first byte of of input
     USART2->DR = (value & 0xFF);
 
@@ -64,23 +87,26 @@ void usartWriteChar(uint8_t value)
 
 void usartWriteNumber(int16_t value)
 {
-    char buffer[12];  // Max 10 digits for uint32_t + null terminator + 1 extra
+    char buffer[12]; // Max 10 digits for uint32_t + null terminator + 1 extra
     int i = 0;
-    
+
     // Handle zero case
-    if (value == 0) {
+    if (value == 0)
+    {
         usartWriteChar('0');
         return;
     }
-    
+
     // Convert number to string (reversed)
-    while (value > 0) {
+    while (value > 0)
+    {
         buffer[i++] = '0' + (value % 10);
         value /= 10;
     }
-    
+
     // Print in correct order (reverse the buffer)
-    while (i > 0) {
+    while (i > 0)
+    {
         usartWriteChar(buffer[--i]);
     }
 }

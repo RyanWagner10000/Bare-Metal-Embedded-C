@@ -32,8 +32,8 @@ typedef struct
 } SPI_TypeDef;
 
 void initSPI(void);
-void transmitSPI(uint8_t *data, uint32_t size);
-void receiveSPI(uint8_t *data, uint32_t size);
+void transmitSPI(uint8_t *address, uint32_t size);
+void receiveSPI(uint8_t *address, uint32_t size);
 void enableCS(void);
 void disableCS(void);
 

@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
+#include "printing.h"
 
 #define USART2_BASE 0x40004400
 #define BAUDRATE 9600
@@ -33,6 +34,7 @@ typedef struct
 void initUSART2(void);
 void usartWriteChar(uint8_t value);
 void usartWriteNumber(int16_t ch);
+void usartWriteString(const char *string);
 uint32_t usart2Read(void);
 
 #endif // USART_H

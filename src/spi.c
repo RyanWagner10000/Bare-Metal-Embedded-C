@@ -39,14 +39,18 @@ void initSPI(void)
     GPIOB->AFRL |= (5U << 16); // AFRL4 -> 0101 = AF5
     GPIOB->AFRL |= (5U << 20); // AFRL5 -> 0101 = AF5
 
+    // Initialize CS Pin to high
+    GPIOB->ODR |= (1U << 7);
+
     // Clear config to init
     SPI1->CR1 = 0x0000;
 
-    // Set clock to fPCLK/4
-    SPI1->CR1 |= (1U << 3);
+    // Set clock to fPCLK/16 (BR = 011)
+    SPI1->CR1 &= ~(7U << 3); // Clear BR[2:0]
+    SPI1->CR1 |= (3U << 3);  // Set BR = 011 = /16
 
-    // Set CPHA and CPOL to determine behavior
-    SPI1->CR1 |= (3U << 0);
+    // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
+    SPI1->CR1 &= ~(3U << 0);
 
     // Enable FULL duplex
     // SPI1->CR1 &= ~(1U << 10);
@@ -67,7 +71,7 @@ void initSPI(void)
     return;
 }
 
-void transmitSPI(uint8_t *data, uint32_t size)
+void transmitSPI(uint8_t *address, uint32_t size)
 {
     uint32_t i = 0;
     uint8_t temp;
@@ -79,7 +83,7 @@ void transmitSPI(uint8_t *data, uint32_t size)
             ;
 
         // Write data to register
-        SPI1->DR = data[i];
+        SPI1->DR = address[i];
         i++;
     }
 
@@ -99,22 +103,23 @@ void transmitSPI(uint8_t *data, uint32_t size)
     return;
 }
 
-void receiveSPI(uint8_t *data, uint32_t size)
+void receiveSPI(uint8_t *address, uint32_t size)
 {
     while (size)
     {
         // Wait until transmit buffer is empty
         while (!(SPI1->SR & (1U << 1)))
             ;
-            
+
         // Send dummy data
         SPI1->DR = 0;
 
         // Wait for RXNE FLAG to be set
-        while (!(SPI1->SR & (1U << 0)));
+        while (!(SPI1->SR & (1U << 0)))
+            ;
 
         // Read data from register
-        *data++ = (SPI1->DR);
+        *address++ = (SPI1->DR);
         size--;
     }
     return;
@@ -124,12 +129,20 @@ void enableCS(void)
 {
     // Turn on SPI to device
     GPIOB->ODR &= ~(1U << 7);
+    // Small delay
+    for (volatile uint8_t i; i < 10; i++)
+        ;
+
     return;
 }
 
 void disableCS(void)
 {
+    // Small delay
+    for (volatile uint8_t i; i < 10; i++)
+        ;
     // Turn off SPI to device
     GPIOB->ODR |= (1U << 7);
+    
     return;
 }
