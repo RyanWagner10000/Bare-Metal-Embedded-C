@@ -26,8 +26,13 @@
 #define GYRO_DATA (0x33)
 #define MAG_DATA (0x11)
 #define REG_BANK_SEL (0x7F)
+
+#define ACCEL_SMPLRT_DIV_1 (0x10)
+#define ACCEL_SMPLRT_DIV_2 (0x11)
 #define ACCEL_CONFIG (0x14)
 #define ACCEL_CONFIG2 (0x15)
+
+#define GYRO_SMPLRT_DIV (0x00)
 #define GYRO_CONFIG1 (0x01)
 #define GYRO_CONFIG2 (0x02)
 

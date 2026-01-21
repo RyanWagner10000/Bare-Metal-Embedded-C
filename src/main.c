@@ -128,14 +128,14 @@ void logAccelData(Moving_Avg_Typedef *avg_x, Moving_Avg_Typedef *avg_y, Moving_A
     float_to_str(avg_z->avg, z_str, 2);
 
     char concat[MAX_STRING_CONCAT];
-    str_concat("Accel x: ", x_str, concat);
+    str_concat("A_x: ", x_str, concat);
     str_concat(concat, " | ", concat);
 
-    str_concat(concat, "Accel y: ", concat);
+    str_concat(concat, "A_y: ", concat);
     str_concat(concat, y_str, concat);
     str_concat(concat, " | ", concat);
 
-    str_concat(concat, "Accel z: ", concat);
+    str_concat(concat, "A_z: ", concat);
     str_concat(concat, z_str, concat);
     str_concat(concat, "\n", concat);
 
@@ -167,14 +167,14 @@ void logGyroData(Moving_Avg_Typedef *avg_x, Moving_Avg_Typedef *avg_y, Moving_Av
     float_to_str(avg_z->avg, z_str, 2);
 
     char concat[MAX_STRING_CONCAT];
-    str_concat("Deg x: ", x_str, concat);
+    str_concat("G_x: ", x_str, concat);
     str_concat(concat, " | ", concat);
 
-    str_concat(concat, "Deg y: ", concat);
+    str_concat(concat, "G_y: ", concat);
     str_concat(concat, y_str, concat);
     str_concat(concat, " | ", concat);
 
-    str_concat(concat, "Deg z: ", concat);
+    str_concat(concat, "G_z: ", concat);
     str_concat(concat, z_str, concat);
     str_concat(concat, "\n", concat);
 
@@ -229,3 +229,31 @@ int main(void)
         }
     }
 }
+
+// MAIN PROGRAM FLOW:
+// ==================
+
+// Initialize:
+//     - Setup clocks (system, timers, peripherals)
+//     - Initialize USART for debugging
+//     - Initialize SPI
+//     - Initialize PWM outputs for motors (TIM1/TIM2/etc)
+//     - Initialize receiver input (PWM/PPM/SBUS on timers)
+//     - Initialize ICM20948
+//     - Calibrate gyroscope (drone must be stationary!)
+//     - Calibrate ESCs if needed
+//     - Wait for pilot "ready" signal (throttle low, stick movement, etc)
+
+// Main Loop:
+//     WHILE forever:
+//         - Check if it's time to run control loop (based on timer/counter)
+//         - IF control_loop_time_reached:
+//             - Read IMU sensors
+//             - Calculate attitude (sensor fusion)
+//             - Read receiver inputs
+//             - Run PID controllers
+//             - Mix outputs to motors
+//             - Send PWM signals to motors
+//             - Update telemetry/logging
+//         - ELSE:
+//             - Handle low-priority tasks (LED blinking, status checks, etc)

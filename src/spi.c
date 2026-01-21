@@ -46,8 +46,8 @@ void initSPI(void)
     SPI1->CR1 = 0x0000;
 
     // Set clock to fPCLK/16 (BR = 011)
-    SPI1->CR1 &= ~(7U << 3);  // Clear BR[2:0]
-    SPI1->CR1 |= (3U << 3);   // Set BR = 011 = /16
+    SPI1->CR1 &= ~(7U << 3); // Clear BR[2:0]
+    SPI1->CR1 |= (3U << 3);  // Set BR = 011 = /16
 
     // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
     SPI1->CR1 &= ~(3U << 0);
@@ -110,12 +110,13 @@ void receiveSPI(uint8_t *address, uint32_t size)
         // Wait until transmit buffer is empty
         while (!(SPI1->SR & (1U << 1)))
             ;
-            
+
         // Send dummy data
         SPI1->DR = 0;
 
         // Wait for RXNE FLAG to be set
-        while (!(SPI1->SR & (1U << 0)));
+        while (!(SPI1->SR & (1U << 0)))
+            ;
 
         // Read data from register
         *address++ = (SPI1->DR);
@@ -128,12 +129,20 @@ void enableCS(void)
 {
     // Turn on SPI to device
     GPIOB->ODR &= ~(1U << 7);
+    // Small delay
+    for (volatile uint8_t i; i < 10; i++)
+        ;
+
     return;
 }
 
 void disableCS(void)
 {
+    // Small delay
+    for (volatile uint8_t i; i < 10; i++)
+        ;
     // Turn off SPI to device
     GPIOB->ODR |= (1U << 7);
+    
     return;
 }
