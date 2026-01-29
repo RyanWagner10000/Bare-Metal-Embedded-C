@@ -69,6 +69,11 @@ catch || {
     exit 1
 }
 
+# Print the size of the compiled elf file
+echo ""
+echo "firmware.elf File Dimensions"
+arm-none-eabi-size firmware.elf
+
 echo " -- DONE! -- "
 
 # Sources

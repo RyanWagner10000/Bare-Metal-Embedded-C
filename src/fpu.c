@@ -18,10 +18,9 @@ void enable_fpu(void)
 
     // Barriers
     __asm__ volatile("dsb" ::: "memory");
-    // ↑ "Wait for the CPACR write to actually complete"
+    // "Wait for the CPACR write to actually complete"
     __asm__ volatile("isb" ::: "memory");
-    // ↑ "Flush the pipeline and re-fetch all instructions,
-    //    now that the FPU is enabled"
+    // "Flush the pipeline and re-fetch all instructions, now that the FPU is enabled"
 
     return;
 }
