@@ -23,8 +23,6 @@ target_compile_options(firmware.elf PRIVATE
     -mfpu=fpv4-sp-d16
     -mfloat-abi=hard
     -std=gnu11
-    -Wall
-    -Wextra
 )
 
 target_link_options(firmware.elf PRIVATE
@@ -35,6 +33,7 @@ target_link_options(firmware.elf PRIVATE
     -mfloat-abi=hard
     -nostdlib
     --specs=nosys.specs
+    -lm
 )
 
 target_link_libraries(firmware.elf gcc m)

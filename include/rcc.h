@@ -11,9 +11,9 @@
 
 #include <stdint.h>
 
-#define SYS_CLOCK 16000000;
+#define SYS_CLOCK (16000000U);
 
-#define RCC_BASE 0x40023800
+#define RCC_BASE (0x40023800)
 
 #define RCC ((RCC_TypeDef *)RCC_BASE)
 

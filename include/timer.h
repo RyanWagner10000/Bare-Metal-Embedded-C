@@ -1,28 +1,25 @@
 /*
- * file: gp_timer.h
- * description: header file for GP_TIMER peripheral structure
+ * file: timer.h
+ * description: header file for timer peripheral structure
  * author: Ryan Wagner
  * date: November 22, 2025
  * notes:
  */
 
-#ifndef GP_TIMER_H
-#define GP_TIMER_H
+#ifndef timer_H
+#define timer_H
 
 #include <stdint.h>
+#include "rcc.h"
+#include "nvic.h"
 
-#define TIM2_BASE 0x40000000
+#define TIM2_BASE (0x40000000)
+#define TIM5_BASE (0x40000C00)
 
-#define TIM2 ((GP_TIMER_TypeDef *)TIM2_BASE)
+#define TIM2 ((timer_TypeDef *)TIM2_BASE)
+#define TIM5 ((timer_TypeDef *)TIM5_BASE)
 
-#define TIM2_EN (1U << 0)
-#define TIM2_CR1_EN (1U << 0)
-#define TIM2_SR_UIF (1U << 0)
-#define TIM2_PSC 16000
-#define TIM5_PSC 0
-// #define TIM2_ARR 500
-#define TIM2_ARR 10
-#define TIM5_ARR 0
+#define TIM_SR_UIF (1U << 0)
 
 typedef struct
 {
@@ -47,6 +44,12 @@ typedef struct
     volatile uint32_t DCR;       // offset: 0x48
     volatile uint32_t DMAR;      // offset: 0x4C
     volatile uint32_t OR;        // offset: 0x50
-} GP_TIMER_TypeDef;
+} timer_TypeDef;
 
-#endif // GP_TIMER_H
+void initTimer2(void);
+void initTimer5(void);
+void delay_ms(uint32_t num_milliseconds);
+void setImuFlag(uint8_t value);
+uint8_t getImuFlag(void);
+
+#endif // timer_H
