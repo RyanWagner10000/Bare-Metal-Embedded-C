@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#define SCB_SHCSR (*((volatile uint32_t*)0xE000ED24))
+#define SCB_SHCSR (*((volatile uint32_t *)0xE000ED24))
 
 #define SCB_FP_EXTENSION (0xE000ED00)
 #define CPACR_OFFSET (0x88)

@@ -8,6 +8,15 @@
 
 #include "spi.h"
 
+/**
+ * @brief Initalize SPI1 on PB3/4/5 with Chip Select on PB7 for IMU module
+ *
+ * @param None
+ *
+ * @return None
+ *
+ * @note Uses bus clock frequency / 16 for timing
+ */
 void initSPI(void)
 {
     // Enable clock to GPIOB
@@ -71,6 +80,14 @@ void initSPI(void)
     return;
 }
 
+/**
+ * @brief Transmit messages on the SPI1 peripheral
+ *
+ * @param address Array of addresses to transmit
+ * @param size Size of array messages to transmit
+ *
+ * @return None
+ */
 void transmitSPI(uint8_t *address, uint32_t size)
 {
     uint32_t i = 0;
@@ -103,6 +120,14 @@ void transmitSPI(uint8_t *address, uint32_t size)
     return;
 }
 
+/**
+ * @brief Receives messages on the SPI1 peripheral
+ *
+ * @param address Array of addresses to recieve
+ * @param size Size of array messages to recieve
+ *
+ * @return None
+ */
 void receiveSPI(uint8_t *address, uint32_t size)
 {
     while (size)
@@ -125,6 +150,13 @@ void receiveSPI(uint8_t *address, uint32_t size)
     return;
 }
 
+/**
+ * @brief Enable the Chip Select pin on GPIO PB7 to begin talking to IMU module
+ *
+ * @param None
+ *
+ * @return None
+ */
 void enableCS(void)
 {
     // Turn on SPI to device
@@ -136,6 +168,13 @@ void enableCS(void)
     return;
 }
 
+/**
+ * @brief Disable the Chip Select pin on GPIO PB7 to stop talking to IMU module
+ *
+ * @param None
+ *
+ * @return None
+ */
 void disableCS(void)
 {
     // Small delay
@@ -143,6 +182,6 @@ void disableCS(void)
         ;
     // Turn off SPI to device
     GPIOB->ODR |= (1U << 7);
-    
+
     return;
 }

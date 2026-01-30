@@ -89,7 +89,7 @@ uint8_t initICM20948(void)
     writeIsm20948(PWR_MGMT_1, 0x80);
     for (uint32_t i = 0; i < 100000; i++)
         ;
-    
+
     // Set to auto sense best clock source
     writeIsm20948(PWR_MGMT_1, 0x01);
     for (uint32_t i = 0; i < 10000; i++)

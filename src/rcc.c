@@ -6,8 +6,15 @@
  * notes:
  */
 
- #include "rcc.h"
+#include "rcc.h"
 
+/**
+ * @brief Initialize RCC peripheral
+ *
+ * @param None
+ *
+ * @return None
+ */
 void init_rcc(void)
 {
     return;
