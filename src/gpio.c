@@ -1,6 +1,6 @@
 /*
  * file: gpio.c
- * description: file that contains the helper functions for timers 2 & 5
+ * description: file that contains helper functions for various things on GPIO pins
  * author: Ryan Wagner
  * date: December 5, 2025
  * notes:

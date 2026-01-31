@@ -11,6 +11,31 @@
 uint8_t check_imu_flag = 0;
 
 /**
+ * @brief Gets the check_imu_flag global variable
+ *
+ * @param None
+ *
+ * @return None
+ */
+uint8_t getImuFlag(void)
+{
+    return check_imu_flag;
+}
+
+/**
+ * @brief Sets the check_imu_flag global variable
+ *
+ * @param value Value to place in the check_imu_flag global variable
+ *
+ * @return None
+ */
+void setImuFlag(uint8_t value)
+{
+    check_imu_flag = value;
+    return;
+}
+
+/**
  * @brief Initialize Timer2 peripheral to control update frequency for complimentary filter
  *
  * @param None
@@ -46,31 +71,6 @@ void initTimer2(void)
     // Enable TIM2 on Control Register AFTER setting everything up
     TIM2->CR1 = (1U << 0);
 
-    return;
-}
-
-/**
- * @brief Gets the check_imu_flag global variable
- *
- * @param None
- *
- * @return None
- */
-uint8_t getImuFlag(void)
-{
-    return check_imu_flag;
-}
-
-/**
- * @brief Sets the check_imu_flag global variable
- *
- * @param value Value to place in the check_imu_flag global variable
- *
- * @return None
- */
-void setImuFlag(uint8_t value)
-{
-    check_imu_flag = value;
     return;
 }
 

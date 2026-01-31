@@ -1,6 +1,6 @@
 /*
  * file: usart.c
- * description: file that contains the helper functions for timers 2 & 5
+ * description: file that contains the helper functions for the USART2 peripheral
  * author: Ryan Wagner
  * date: December 5, 2025
  * notes:
@@ -9,7 +9,7 @@
 #include "usart.h"
 
 /**
- * @brief Initialize the USART2 peripheral for pins PD6/7
+ * @brief Initialize the USART2 peripheral for pins PD5/6
  *
  * @param None
  *

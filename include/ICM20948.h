@@ -13,6 +13,7 @@
 #include "spi.h"
 #include "printing.h"
 #include "usart.h"
+#include "timer.h"
 
 #define RESET_REGISTER (0x00)
 #define ID (0xEA)
@@ -36,8 +37,7 @@
 #define GYRO_CONFIG1 (0x01)
 #define GYRO_CONFIG2 (0x02)
 
-// void initICM20948(void);
-uint8_t initICM20948(void);
+void initICM20948(void);
 void printRegister(uint8_t address);
 void getXYZ(uint8_t address, uint8_t *data);
 void writeIsm20948(uint8_t address, uint8_t value);
