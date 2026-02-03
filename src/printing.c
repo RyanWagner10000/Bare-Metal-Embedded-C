@@ -8,6 +8,13 @@
 
 #include "printing.h"
 
+/**
+ * @brief Calculate the length of a character array
+ *
+ * @param s Character array
+ *
+ * @return Size of input character array
+ */
 uint32_t get_string_length(const char *s)
 {
     uint32_t length = 0;
@@ -20,7 +27,17 @@ uint32_t get_string_length(const char *s)
     return length;
 }
 
-// string concatenation
+/**
+ * @brief Concatenate two character arrays into one
+ *
+ * @param str1 First character array
+ * @param str2 Second character array
+ * @param concat Resulting joining character array
+ *
+ * @return None
+ *
+ * @note Size of concat vairable must be of sufficient size to hold both strings or extra characters will be lost
+ */
 void str_concat(char *str1, char *str2, char *concat)
 {
     uint32_t i = 0;
@@ -52,7 +69,14 @@ void str_concat(char *str1, char *str2, char *concat)
     return;
 }
 
-// Reverse a string in place
+/**
+ * @brief Reverse a string
+ *
+ * @param str Given charcter array to reverse
+ * @param len Length of charcter array
+ *
+ * @return None
+ */
 void reverse(char *str, uint32_t len)
 {
     uint32_t i = 0, j = len - 1;
@@ -66,8 +90,15 @@ void reverse(char *str, uint32_t len)
     }
 }
 
+/**
+ * @brief Convert an integer to a character array
+ *
+ * @param n Integer to convert to string
+ * @param buffer Buffer to store digits as characters
+ *
+ * @return Length of the converted string
+ */
 // Converts an integer 'n' to a string and stores it in 'buffer'
-// Returns the length of the string
 uint32_t int_to_str(int32_t n, char *buffer)
 {
     uint32_t length = 0;
@@ -109,9 +140,18 @@ uint32_t int_to_str(int32_t n, char *buffer)
     return length;
 }
 
+/**
+ * @brief Convert a float to a character array
+ *
+ * @param n Float to convert to string
+ * @param buffer Buffer to store digits as characters
+ * @param afterpoint Decimal point resolution of the float conversion
+ *
+ * @return None
+ */
 // Converts a float to a string in char array res[]
 // afterpoint: number of digits to consider after the decimal point
-void float_to_str(float n, char *res, uint32_t afterpoint)
+void float_to_str(float n, char *buffer, uint32_t afterpoint)
 {
     afterpoint++;
 
@@ -119,7 +159,7 @@ void float_to_str(float n, char *res, uint32_t afterpoint)
     uint32_t index = 0;
     if (n < 0.0f)
     {
-        res[index++] = '-';
+        buffer[index++] = '-';
         n = -n;
     }
 
@@ -130,23 +170,23 @@ void float_to_str(float n, char *res, uint32_t afterpoint)
     float fpart = n - (float)ipart;
 
     // Convert integer part to string
-    int32_t i = int_to_str(ipart, res + index);
+    int32_t i = int_to_str(ipart, buffer + index);
     i += index;
 
     // Check for decimal part
     if (afterpoint != 0)
     {
-        res[i++] = '.';
+        buffer[i++] = '.';
 
         // Get fractional digits
         for (uint32_t k = 0; k < afterpoint; k++)
         {
             fpart *= 10.0f;
             uint32_t digit = (uint32_t)fpart;
-            res[i++] = '0' + digit;
+            buffer[i++] = '0' + digit;
             fpart -= (float)digit;
         }
-        res[i] = '\0';
+        buffer[i] = '\0';
     }
 
     return;

@@ -46,10 +46,10 @@ typedef struct
     volatile uint32_t OR;        // offset: 0x50
 } timer_TypeDef;
 
+void setImuFlag(uint8_t value);
+uint8_t getImuFlag(void);
 void initTimer2(void);
 void initTimer5(void);
 void delay_ms(uint32_t num_milliseconds);
-void setImuFlag(uint8_t value);
-uint8_t getImuFlag(void);
 
 #endif // timer_H

@@ -8,6 +8,15 @@
 
 #include "adc.h"
 
+/**
+ * @brief Initialize the Analog to Digital Converter on PA1
+ *
+ * @param None
+ *
+ * @return None
+ *
+ * @note Sets ADC to 8-bit accuracy
+ */
 void initADC(void)
 {
     // Enable clock to GPIOA
@@ -36,6 +45,13 @@ void initADC(void)
     return;
 }
 
+/**
+ * @brief Starts the ADC conversion on ADC1 PA1
+ *
+ * @param None
+ *
+ * @return None
+ */
 void startADCConversion(void)
 {
     // Enable continuous conversion
@@ -47,6 +63,13 @@ void startADCConversion(void)
     return;
 }
 
+/**
+ * @brief Read the value off the ADC1 Data Register if the status says it's ready
+ *
+ * @param None
+ *
+ * @return An unsigned 32 bit value
+ */
 uint32_t readADC(void)
 {
     while (!(ADC1->SR & (1U << 1)))

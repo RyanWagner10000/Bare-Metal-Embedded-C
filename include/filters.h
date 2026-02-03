@@ -32,7 +32,6 @@
 #define GYRO_SCALE (0.007629395)
 #define ACCEL_SCALE (0.000061035)
 
-
 typedef struct
 {
     int32_t sum;

@@ -1,6 +1,6 @@
 /*
  * file: usart.c
- * description: file that contains the helper functions for timers 2 & 5
+ * description: file that contains the helper functions for the USART2 peripheral
  * author: Ryan Wagner
  * date: December 5, 2025
  * notes:
@@ -8,6 +8,13 @@
 
 #include "usart.h"
 
+/**
+ * @brief Initialize the USART2 peripheral for pins PD5/6
+ *
+ * @param None
+ *
+ * @return None
+ */
 void initUSART2(void)
 {
     // Allow clock access to USART2 on bus APB1
@@ -46,6 +53,13 @@ void initUSART2(void)
     return;
 }
 
+/**
+ * @brief Write a "string" to the USART2 peripheral
+ *
+ * @param string Character array to "print" to the terminal
+ *
+ * @return None
+ */
 void usartWriteString(const char *string)
 {
     int32_t str_len = get_string_length(string);
@@ -69,14 +83,21 @@ void usartWriteString(const char *string)
     return;
 }
 
-void usartWriteChar(uint8_t value)
+/**
+ * @brief Write a single character to the USART2 peripheral
+ *
+ * @param character ASCII style character to "print" to the terminal
+ *
+ * @return None
+ */
+void usartWriteChar(uint8_t character)
 {
     // Make sure the transmit data register is NOT empty
     while (!(USART2->SR & (1U << 7)))
         ;
 
     // Get first byte of of input
-    USART2->DR = (value & 0xFF);
+    USART2->DR = (character & 0xFF);
 
     // Wait until done transmitting
     while (!(USART2->SR & (1U << 6)))
@@ -85,6 +106,13 @@ void usartWriteChar(uint8_t value)
     return;
 }
 
+/**
+ * @brief Write an integer to the USART2 peripheral
+ *
+ * @param value Signed 16-bit integer to "print" to the terminal
+ *
+ * @return None
+ */
 void usartWriteNumber(int16_t value)
 {
     char buffer[12]; // Max 10 digits for uint32_t + null terminator + 1 extra
@@ -111,6 +139,13 @@ void usartWriteNumber(int16_t value)
     }
 }
 
+/**
+ * @brief Read a value off the USART2 Data Register when the Status Register says it's ready
+ *
+ * @param None
+ *
+ * @return An unsigned 32-bit integer
+ */
 uint32_t usart2Read(void)
 {
     // Make sure the receive data register is NOT empty

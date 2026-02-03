@@ -49,7 +49,7 @@ typedef struct
     volatile uint32_t RESERVED9;  // offset: 0x6C
     volatile uint32_t BDCR;       // offset: 0x70
     volatile uint32_t CSR;        // offset: 0x74
-    volatile uint32_t RESERVED10;  // offset: 0x78
+    volatile uint32_t RESERVED10; // offset: 0x78
     volatile uint32_t RESERVED11; // offset: 0x7C
     volatile uint32_t SSCGR;      // offset: 0x80
     volatile uint32_t PLLI2SCFGR; // offset: 0x84

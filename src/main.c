@@ -8,6 +8,15 @@
 
 #include "main.h"
 
+/**
+ * @brief Initiate all peripherals for the system
+ *
+ * @param None
+ *
+ * @return None
+ *
+ * @note Flashes the green LED 5 times upon success
+ */
 void initPeripherals(void)
 {
     enable_faults();
@@ -43,6 +52,13 @@ void initPeripherals(void)
     return;
 }
 
+/**
+ * @brief Main forever while-loop
+ *
+ * @param None
+ *
+ * @return None
+ */
 int main(void)
 {
     initPeripherals();

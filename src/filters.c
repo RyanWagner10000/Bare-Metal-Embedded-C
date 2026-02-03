@@ -34,11 +34,26 @@ volatile int16_t x, y, z;
 volatile float roll_angle;
 volatile float pitch_angle;
 
+/**
+ * @brief Function to return error number for math.h library
+ *
+ * @param None
+ *
+ * @return Error number
+ */
 int *__errno(void)
 {
     return &errno;
 }
 
+/**
+ * @brief Initialize a moving average struct
+ *
+ * @param avg Moving Average Struct pointer
+ * @param size Size of the moving average array
+ *
+ * @return None
+ */
 void init_moving_average(Moving_Avg_Typedef *avg, uint8_t size)
 {
     // Set everything to 0 to it's filled and ready to use
@@ -55,6 +70,13 @@ void init_moving_average(Moving_Avg_Typedef *avg, uint8_t size)
     return;
 }
 
+/**
+ * @brief Initialize all moving averages for accelerometer and gyroscope
+ *
+ * @param None
+ *
+ * @return None
+ */
 void init_averages(void)
 {
     init_moving_average(&accel_avg_x, ACCEL_BUFFER_SIZE);
@@ -67,6 +89,14 @@ void init_averages(void)
     return;
 }
 
+/**
+ * @brief Update a Moving Average Struct with a value
+ *
+ * @param avg Moving Average Struct pointer
+ * @param value Value to add to the moving average
+ *
+ * @return None
+ */
 void update_avg(Moving_Avg_Typedef *avg, int32_t value)
 {
     // Get previous index
@@ -89,6 +119,13 @@ void update_avg(Moving_Avg_Typedef *avg, int32_t value)
     return;
 }
 
+/**
+ * @brief Update all the moving averages given a register on the IMU
+ *
+ * @param address IMU register address for accelerometer or gyroscope
+ *
+ * @return None
+ */
 void update_moving_avg(uint8_t address)
 {
     // Check to see if address is valid
@@ -121,6 +158,13 @@ void update_moving_avg(uint8_t address)
     return;
 }
 
+/**
+ * @brief Prints a formatted "string" of accel/gyro data to the USART2 peripheral
+ *
+ * @param address IMU register address for accelerometer or gyroscope
+ *
+ * @return None
+ */
 void logSensorData(uint8_t address)
 {
     float avg_x = 0.0;
@@ -179,6 +223,13 @@ void logSensorData(uint8_t address)
     usartWriteString(concat);
 }
 
+/**
+ * @brief Complimentary filter calculator for acceleromter and gyroscope on IMU
+ *
+ * @param loop_frequency Float value of update frequency
+ *
+ * @return None
+ */
 void calculate_attitude(float loop_frequency)
 {
     // Read gyro data
@@ -224,6 +275,13 @@ void calculate_attitude(float loop_frequency)
     return;
 }
 
+/**
+ * @brief Prints a formatted "string" of pitch and roll values from compimentary filter
+ *
+ * @param None
+ *
+ * @return None
+ */
 void log_attitude(void)
 {
     char roll_str[MAX_FLOAT_STRING];

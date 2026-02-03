@@ -26,10 +26,10 @@
 #define CONT (1U << 1)
 #define SWSTART (1U << 30)
 
-#define ADC1 ((ADC_TypeDef *) (ADC_BASE+ADC1_OFFSET))
-#define ADC2 ((ADC_TypeDef *) (ADC_BASE+ADC2_OFFSET))
-#define ADC3 ((ADC_TypeDef *) (ADC_BASE+ADC3_OFFSET))
-#define ADC_COMMON ((ADC_Common_TypeDef *)ADC_BASE+ADC_COMMON_OFFSET)
+#define ADC1 ((ADC_TypeDef *)(ADC_BASE + ADC1_OFFSET))
+#define ADC2 ((ADC_TypeDef *)(ADC_BASE + ADC2_OFFSET))
+#define ADC3 ((ADC_TypeDef *)(ADC_BASE + ADC3_OFFSET))
+#define ADC_COMMON ((ADC_Common_TypeDef *)ADC_BASE + ADC_COMMON_OFFSET)
 
 typedef struct
 {
@@ -57,9 +57,9 @@ typedef struct
 
 typedef struct
 {
-    volatile uint32_t CSR;   // offset: 0x00
-    volatile uint32_t CCR;   // offset: 0x04
-    volatile uint32_t CDR;   // offset: 0x08
+    volatile uint32_t CSR; // offset: 0x00
+    volatile uint32_t CCR; // offset: 0x04
+    volatile uint32_t CDR; // offset: 0x08
 } ADC_Common_TypeDef;
 
 void initADC(void);

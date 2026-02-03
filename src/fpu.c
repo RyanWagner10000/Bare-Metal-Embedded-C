@@ -8,6 +8,17 @@
 
 #include "fpu.h"
 
+/**
+ * @brief Enable the Floating Point Unit (FPU) on the processor
+ *
+ * @note
+ * Does this by modifying the CPACR register and setting bits 10/11 to 1. Waits for the operation to fully complete. Clears and then gets instructions now that the FPU is enabled.
+ *
+ * @param None
+ *
+ * @return None
+ *
+ */
 void enable_fpu(void)
 {
     // Read-modify-write to enable CP10 and CP11
@@ -25,6 +36,13 @@ void enable_fpu(void)
     return;
 }
 
+/**
+ * @brief Enable the Usage, Bus, and MemManage Fault handers
+ *
+ * @param None
+ *
+ * @return None
+ */
 void enable_faults(void)
 {
     // Enable UsageFault, BusFault, and MemManageFault handlers
