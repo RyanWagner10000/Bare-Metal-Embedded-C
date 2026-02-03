@@ -9,7 +9,7 @@ Picture coming soon when it doesn't look like a rat's nest of wires :)
 - [Flashing](#flashing-the-board)
 - [Used Components](#external-components)
 - [Peripheral Settings](#current-peripheral-settings)
-- [Complimentary Filter](#complimentary-filter)
+- [Filter Methods](#complimentary-filter)
 
 <br>
 
