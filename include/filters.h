@@ -10,21 +10,21 @@
 #define COMP_FILTER_H
 
 #include <stdint.h>
-#include "printing.h"
-#include "ICM20948.h"
 #include <math.h>
 #include <errno.h>
+#include "printing.h"
+#include "ICM20948.h"
 
 #define roll = (0.0)
 #define pitch = (0.0)
 #define x_offset = (0.0)
 #define y_offset = (0.0)
 #define alpha = (0.98)
-// #define dt = ()
 
 #define MAX_BUFFER_SIZE (100)
 #define ACCEL_BUFFER_SIZE (50)
 #define GYRO_BUFFER_SIZE (50)
+#define MAG_BUFFER_SIZE (10)
 
 #define FLOAT_PRECISION (2)
 #define ALPHA (0.9)
@@ -43,10 +43,10 @@ typedef struct
 
 int errno; // A simple global variable to hold the error number
 
-void init_averages(void);
-void update_moving_avg(uint8_t address);
-void logSensorData(uint8_t address);
-void calculate_attitude(float loop_frequency);
-void log_attitude(void);
+void initMovingAverages(void);
+void updateMovingAvg(uint8_t address);
+void logAvgSensorData(uint8_t address);
+void calculateAttitude(float loop_frequency);
+void logAttitude(void);
 
 #endif // COMP_FILTER_H

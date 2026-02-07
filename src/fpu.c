@@ -19,7 +19,7 @@
  * @return None
  *
  */
-void enable_fpu(void)
+void enableFPU(void)
 {
     // Read-modify-write to enable CP10 and CP11
     uint32_t cpacr = CPACR;
@@ -43,7 +43,7 @@ void enable_fpu(void)
  *
  * @return None
  */
-void enable_faults(void)
+void enableFaults(void)
 {
     // Enable UsageFault, BusFault, and MemManageFault handlers
     SCB_SHCSR |= (1 << 18) | (1 << 17) | (1 << 16);

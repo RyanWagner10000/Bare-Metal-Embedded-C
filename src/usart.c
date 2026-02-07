@@ -62,7 +62,7 @@ void initUSART2(void)
  */
 void usartWriteString(const char *string)
 {
-    int32_t str_len = get_string_length(string);
+    int32_t str_len = getStringLength(string);
     char char_i = 0;
 
     for (int32_t i = 0; i < str_len; i++)

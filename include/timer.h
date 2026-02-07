@@ -50,6 +50,6 @@ void setImuFlag(uint8_t value);
 uint8_t getImuFlag(void);
 void initTimer2(void);
 void initTimer5(void);
-void delay_ms(uint32_t num_milliseconds);
+void delayMillisecond(uint32_t num_milliseconds);
 
 #endif // timer_H

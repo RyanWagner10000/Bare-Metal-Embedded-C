@@ -15,7 +15,7 @@
  *
  * @return Size of input character array
  */
-uint32_t get_string_length(const char *s)
+uint32_t getStringLength(const char *s)
 {
     uint32_t length = 0;
 
@@ -38,7 +38,7 @@ uint32_t get_string_length(const char *s)
  *
  * @note Size of concat vairable must be of sufficient size to hold both strings or extra characters will be lost
  */
-void str_concat(char *str1, char *str2, char *concat)
+void strConcat(char *str1, char *str2, char *concat)
 {
     uint32_t i = 0;
     uint32_t j = 0;
@@ -99,7 +99,7 @@ void reverse(char *str, uint32_t len)
  * @return Length of the converted string
  */
 // Converts an integer 'n' to a string and stores it in 'buffer'
-uint32_t int_to_str(int32_t n, char *buffer)
+uint32_t intToStr(int32_t n, char *buffer)
 {
     uint32_t length = 0;
     uint32_t is_neg = 0;
@@ -151,7 +151,7 @@ uint32_t int_to_str(int32_t n, char *buffer)
  */
 // Converts a float to a string in char array res[]
 // afterpoint: number of digits to consider after the decimal point
-void float_to_str(float n, char *buffer, uint32_t afterpoint)
+void floatToStr(float n, char *buffer, uint32_t afterpoint)
 {
     afterpoint++;
 
@@ -170,7 +170,7 @@ void float_to_str(float n, char *buffer, uint32_t afterpoint)
     float fpart = n - (float)ipart;
 
     // Convert integer part to string
-    int32_t i = int_to_str(ipart, buffer + index);
+    int32_t i = intToStr(ipart, buffer + index);
     i += index;
 
     // Check for decimal part
