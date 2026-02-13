@@ -25,7 +25,7 @@
 // #define FPCAR (*((volatile uint32_t *)SCB_FP_EXTENSION + FPCAR_OFFSET))
 // #define FPDSCR (*((volatile uint32_t *)SCB_FP_EXTENSION + FPDSCR_OFFSET))
 
-void enable_fpu(void);
-void enable_faults(void);
+void enableFPU(void);
+void enableFaults(void);
 
 #endif // FPU_H

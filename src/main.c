@@ -19,8 +19,8 @@
  */
 void initPeripherals(void)
 {
-    enable_faults();
-    enable_fpu();
+    enableFaults();
+    enableFPU();
 
     initGreenLED();
     initOrangeLED();
@@ -76,9 +76,9 @@ int main(void)
         if (button_state)
         {
             run++;
-            run %= 2;
+            run = run & 0x01;
             offLED(GREEN_LED);
-            delay_ms(100);
+            delayMillisecond(150);
         }
 
         // Flag to indicate update of the IMU complimetary filter
@@ -88,13 +88,17 @@ int main(void)
             setImuFlag(0);
 
             // Complimentary filter
-            calculate_attitude(0.004);
+            calculateAttitude(0.004);
         }
 
         if (run)
         {
             // Print attitude to the screen
-            log_attitude();
+            // logAttitude();
+
+            logRawMagnetometer();
+            // logRawAccelerometer();
+            // logRawGyroscope();
 
             // Toggle LED to show it's working
             toggleLED(GREEN_LED);

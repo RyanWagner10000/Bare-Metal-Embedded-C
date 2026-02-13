@@ -18,6 +18,11 @@ Moving_Avg_Typedef gyro_avg_x;
 Moving_Avg_Typedef gyro_avg_y;
 Moving_Avg_Typedef gyro_avg_z;
 
+// Magnetometer data
+Moving_Avg_Typedef mag_avg_x;
+Moving_Avg_Typedef mag_avg_y;
+Moving_Avg_Typedef mag_avg_z;
+
 // Accelerometer offsets
 volatile int16_t accel_offset_x = 0;
 volatile int16_t accel_offset_y = 0;
@@ -28,11 +33,16 @@ volatile int16_t gyro_offset_x = 0;
 volatile int16_t gyro_offset_y = 0;
 volatile int16_t gyro_offset_z = 0;
 
+// Magnetometer offsets
+volatile int16_t mag_offset_x = 0;
+volatile int16_t mag_offset_y = 0;
+volatile int16_t mag_offset_z = 0;
+
 // Input buffer and temp variables
-uint8_t data_buffer[6] = {0, 0, 0, 0, 0, 0};
-volatile int16_t x, y, z;
-volatile float roll_angle;
-volatile float pitch_angle;
+uint8_t data_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+volatile int16_t x, y, z = 0;
+volatile float roll_angle = 0;
+volatile float pitch_angle = 0;
 
 /**
  * @brief Function to return error number for math.h library
@@ -54,7 +64,7 @@ int *__errno(void)
  *
  * @return None
  */
-void init_moving_average(Moving_Avg_Typedef *avg, uint8_t size)
+void initSingleAverage(Moving_Avg_Typedef *avg, uint8_t size)
 {
     // Set everything to 0 to it's filled and ready to use
     avg->length = (uint32_t)size;
@@ -71,21 +81,26 @@ void init_moving_average(Moving_Avg_Typedef *avg, uint8_t size)
 }
 
 /**
- * @brief Initialize all moving averages for accelerometer and gyroscope
+ * @brief Initialize all moving averages for accelerometer, gyroscope, and magnetometer
  *
  * @param None
  *
  * @return None
  */
-void init_averages(void)
+void initMovingAverages(void)
 {
-    init_moving_average(&accel_avg_x, ACCEL_BUFFER_SIZE);
-    init_moving_average(&accel_avg_y, ACCEL_BUFFER_SIZE);
-    init_moving_average(&accel_avg_z, ACCEL_BUFFER_SIZE);
+    initSingleAverage(&accel_avg_x, ACCEL_BUFFER_SIZE);
+    initSingleAverage(&accel_avg_y, ACCEL_BUFFER_SIZE);
+    initSingleAverage(&accel_avg_z, ACCEL_BUFFER_SIZE);
 
-    init_moving_average(&gyro_avg_x, GYRO_BUFFER_SIZE);
-    init_moving_average(&gyro_avg_y, GYRO_BUFFER_SIZE);
-    init_moving_average(&gyro_avg_z, GYRO_BUFFER_SIZE);
+    initSingleAverage(&gyro_avg_x, GYRO_BUFFER_SIZE);
+    initSingleAverage(&gyro_avg_y, GYRO_BUFFER_SIZE);
+    initSingleAverage(&gyro_avg_z, GYRO_BUFFER_SIZE);
+
+    initSingleAverage(&mag_avg_x, MAG_BUFFER_SIZE);
+    initSingleAverage(&mag_avg_y, MAG_BUFFER_SIZE);
+    initSingleAverage(&mag_avg_z, MAG_BUFFER_SIZE);
+
     return;
 }
 
@@ -97,7 +112,7 @@ void init_averages(void)
  *
  * @return None
  */
-void update_avg(Moving_Avg_Typedef *avg, int32_t value)
+void updateAvg(Moving_Avg_Typedef *avg, int32_t value)
 {
     // Get previous index
     uint32_t previous_idx = (avg->pos - 1 + avg->length) % avg->length;
@@ -126,33 +141,55 @@ void update_avg(Moving_Avg_Typedef *avg, int32_t value)
  *
  * @return None
  */
-void update_moving_avg(uint8_t address)
+void updateMovingAvg(uint8_t address)
 {
     // Check to see if address is valid
-    if (address != ACCEL_DATA && address != GYRO_DATA)
+    if (address != ACCEL_DATA && address != GYRO_DATA && address != MAG_DATA)
     {
         return;
     }
 
-    // Read accelerometer data starting from data start
-    getXYZ(address, data_buffer);
-
-    // Combine high and low bytes to form data
-    x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
-    y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
-    z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
-
     if (address == ACCEL_DATA)
     {
-        update_avg(&accel_avg_x, (int32_t)x);
-        update_avg(&accel_avg_y, (int32_t)y);
-        update_avg(&accel_avg_z, (int32_t)z);
+        // Read accelerometer data starting from data start
+        getXYZ(address, data_buffer, 6);
+
+        // Combine high and low bytes to form data
+        x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
+        y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
+        z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
+
+        updateAvg(&accel_avg_x, (int32_t)x);
+        updateAvg(&accel_avg_y, (int32_t)y);
+        updateAvg(&accel_avg_z, (int32_t)z);
     }
     else if (address == GYRO_DATA)
     {
-        update_avg(&gyro_avg_x, (int32_t)x);
-        update_avg(&gyro_avg_y, (int32_t)y);
-        update_avg(&gyro_avg_z, (int32_t)z);
+        // Read accelerometer data starting from data start
+        getXYZ(address, data_buffer, 6);
+
+        // Combine high and low bytes to form data
+        x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
+        y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
+        z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
+
+        updateAvg(&gyro_avg_x, (int32_t)x);
+        updateAvg(&gyro_avg_y, (int32_t)y);
+        updateAvg(&gyro_avg_z, (int32_t)z);
+    }
+    else if (address == MAG_DATA)
+    {
+        // Read accelerometer data starting from data start
+        getXYZ(address, data_buffer, 8);
+
+        // Combine high and low bytes to form data
+        x = (int16_t)((data_buffer[1] << 8) | data_buffer[2]);
+        y = (int16_t)((data_buffer[3] << 8) | data_buffer[4]);
+        z = (int16_t)((data_buffer[5] << 8) | data_buffer[6]);
+
+        updateAvg(&mag_avg_x, (int32_t)x);
+        updateAvg(&mag_avg_y, (int32_t)y);
+        updateAvg(&mag_avg_z, (int32_t)z);
     }
 
     return;
@@ -165,7 +202,7 @@ void update_moving_avg(uint8_t address)
  *
  * @return None
  */
-void logSensorData(uint8_t address)
+void logAvgSensorData(uint8_t address)
 {
     float avg_x = 0.0;
     float avg_y = 0.0;
@@ -192,6 +229,16 @@ void logSensorData(uint8_t address)
         header[2] = 'r';
         header[3] = 'o';
     }
+    else if (address == MAG_DATA)
+    {
+        avg_x = mag_avg_x.avg;
+        avg_y = mag_avg_y.avg;
+        avg_z = mag_avg_z.avg;
+        header[0] = 'M';
+        header[1] = 'a';
+        header[2] = 'g';
+        header[3] = 'n';
+    }
     else
     {
         return;
@@ -201,24 +248,24 @@ void logSensorData(uint8_t address)
     char y_str[MAX_FLOAT_STRING];
     char z_str[MAX_FLOAT_STRING];
 
-    float_to_str(avg_x, x_str, FLOAT_PRECISION);
-    float_to_str(avg_y, y_str, FLOAT_PRECISION);
-    float_to_str(avg_z, z_str, FLOAT_PRECISION);
+    floatToStr(avg_x, x_str, FLOAT_PRECISION);
+    floatToStr(avg_y, y_str, FLOAT_PRECISION);
+    floatToStr(avg_z, z_str, FLOAT_PRECISION);
 
     char concat[MAX_STRING_CONCAT];
-    str_concat(header, ": ", concat);
+    strConcat(header, ": ", concat);
 
-    str_concat(concat, "x = ", concat);
-    str_concat(concat, x_str, concat);
-    str_concat(concat, " | ", concat);
+    strConcat(concat, "x = ", concat);
+    strConcat(concat, x_str, concat);
+    strConcat(concat, " | ", concat);
 
-    str_concat(concat, "y = ", concat);
-    str_concat(concat, y_str, concat);
-    str_concat(concat, " | ", concat);
+    strConcat(concat, "y = ", concat);
+    strConcat(concat, y_str, concat);
+    strConcat(concat, " | ", concat);
 
-    str_concat(concat, "z = ", concat);
-    str_concat(concat, z_str, concat);
-    str_concat(concat, "\n", concat);
+    strConcat(concat, "z = ", concat);
+    strConcat(concat, z_str, concat);
+    strConcat(concat, "\n", concat);
 
     usartWriteString(concat);
 }
@@ -230,10 +277,10 @@ void logSensorData(uint8_t address)
  *
  * @return None
  */
-void calculate_attitude(float loop_frequency)
+void calculateAttitude(float loop_frequency)
 {
     // Read gyro data
-    getXYZ(GYRO_DATA, data_buffer);
+    getXYZ(GYRO_DATA, data_buffer, 6);
 
     // Combine high and low bytes to form data & apply offsets
     x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
@@ -246,7 +293,7 @@ void calculate_attitude(float loop_frequency)
     float gyro_y_dps = y * GYRO_SCALE;
 
     // Read accel data
-    getXYZ(ACCEL_DATA, data_buffer);
+    getXYZ(ACCEL_DATA, data_buffer, 6);
 
     // Combine high and low bytes to form data
     x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
@@ -282,25 +329,25 @@ void calculate_attitude(float loop_frequency)
  *
  * @return None
  */
-void log_attitude(void)
+void logAttitude(void)
 {
     char roll_str[MAX_FLOAT_STRING];
     char pitch_str[MAX_FLOAT_STRING];
 
-    float_to_str(roll_angle, roll_str, FLOAT_PRECISION);
-    float_to_str(pitch_angle, pitch_str, FLOAT_PRECISION);
+    floatToStr(roll_angle, roll_str, FLOAT_PRECISION);
+    floatToStr(pitch_angle, pitch_str, FLOAT_PRECISION);
 
     char concat[MAX_STRING_CONCAT];
 
-    str_concat("Attitude: ", "roll = ", concat);
-    str_concat(concat, roll_str, concat);
-    str_concat(concat, " | ", concat);
+    strConcat("Attitude: ", "roll = ", concat);
+    strConcat(concat, roll_str, concat);
+    strConcat(concat, " | ", concat);
 
-    str_concat(concat, "pitch = ", concat);
-    str_concat(concat, pitch_str, concat);
-    str_concat(concat, " | ", concat);
+    strConcat(concat, "pitch = ", concat);
+    strConcat(concat, pitch_str, concat);
+    strConcat(concat, " | ", concat);
 
-    str_concat(concat, "\n", concat);
+    strConcat(concat, "\n", concat);
 
     usartWriteString(concat);
 }

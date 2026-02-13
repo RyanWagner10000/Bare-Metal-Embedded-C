@@ -15,32 +15,69 @@
 #include "usart.h"
 #include "timer.h"
 
+// General registers
 #define RESET_REGISTER (0x00)
-#define ID (0xEA)
+#define ACCEL_GYRO_ID (0xEA)
+#define MAG_ID (0x09)
+#define MAG_ADDRESS (0x0C)
 #define READ_OPERATION (0x80)
 #define MULTI_BYTE_ENABLE (0x40)
-
 #define USER_CTRL (0x03)
 #define PWR_MGMT_1 (0x06)
 #define PWR_MGMT_2 (0x07)
 #define ACCEL_DATA (0x2D)
 #define GYRO_DATA (0x33)
-#define MAG_DATA (0x11)
 #define REG_BANK_SEL (0x7F)
 
+// Accel registers
 #define ACCEL_SMPLRT_DIV_1 (0x10)
 #define ACCEL_SMPLRT_DIV_2 (0x11)
 #define ACCEL_CONFIG (0x14)
 #define ACCEL_CONFIG2 (0x15)
 
+// Gyro registers
 #define GYRO_SMPLRT_DIV (0x00)
 #define GYRO_CONFIG1 (0x01)
 #define GYRO_CONFIG2 (0x02)
 
+// Mag communication registers
+#define USER_CNTL (0x03)
+#define I2C_MST_ODR_CONFIG (0x00)
+#define I2C_MST_CTRL (0x01)
+#define I2C_MST_DELAY_CTRL (0x02)
+#define I2C_MST_STATUS (0x17)
+#define I2C_SLV0_ADDR (0x03)
+#define I2C_SLV0_REG (0x04)
+#define I2C_SLV0_CTRL (0x05)
+#define I2C_SLV0_DO (0x06)
+#define I2C_SLV4_ADDR (0x13)
+#define I2C_SLV4_REG (0x14)
+#define I2C_SLV4_CTRL (0x15)
+#define I2C_SLV4_DO (0x16)
+#define I2C_SLV4_DI (0x17)
+#define EXT_SLV_SENS_DATA_00 (0x3B)
+
+// Mag registers
+#define MAG_CONFIG (0x31)
+#define MAG_STATUS (0x10)
+#define MAG_DATA (0x11)
+#define CNTL2 (0x31)
+#define CNTL3 (0x32)
+
+#define BANK_ZERO (0x00)
+#define BANK_ONE (0x10)
+#define BANK_TWO (0x20)
+#define BANK_THREE (0x30)
+
+
 void initICM20948(void);
-void printRegister(uint8_t address);
-void getXYZ(uint8_t address, uint8_t *data);
+void printRegister(uint8_t address, uint8_t bank);
+void getXYZ(uint8_t address, uint8_t *data, uint8_t length);
 void writeIsm20948(uint8_t address, uint8_t value);
 uint8_t readRegister(uint8_t address);
+
+void logRawMagnetometer(void);
+void logRawAccelerometer(void);
+void logRawGyroscope(void);
 
 #endif // ICM20948_H

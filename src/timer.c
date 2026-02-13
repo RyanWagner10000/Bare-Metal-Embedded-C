@@ -111,7 +111,7 @@ void initTimer5(void)
  *
  * @return None
  */
-void delay_ms(uint32_t num_milliseconds)
+void delayMillisecond(uint32_t num_milliseconds)
 {
     for (uint32_t i = 0; i < num_milliseconds; i++)
     {
