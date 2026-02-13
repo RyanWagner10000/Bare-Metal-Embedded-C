@@ -76,7 +76,7 @@ int main(void)
         if (button_state)
         {
             run++;
-            run %= 2;
+            run = run & 0x01;
             offLED(GREEN_LED);
             delayMillisecond(150);
         }
@@ -96,10 +96,9 @@ int main(void)
             // Print attitude to the screen
             // logAttitude();
 
-            // Print Magnetometer data
             logRawMagnetometer();
-            logRawAccelerometer();
-            logRawGyroscope();
+            // logRawAccelerometer();
+            // logRawGyroscope();
 
             // Toggle LED to show it's working
             toggleLED(GREEN_LED);

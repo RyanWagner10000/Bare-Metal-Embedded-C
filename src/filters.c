@@ -39,7 +39,7 @@ volatile int16_t mag_offset_y = 0;
 volatile int16_t mag_offset_z = 0;
 
 // Input buffer and temp variables
-uint8_t data_buffer[6] = {0, 0, 0, 0, 0, 0};
+uint8_t data_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 volatile int16_t x, y, z = 0;
 volatile float roll_angle = 0;
 volatile float pitch_angle = 0;
@@ -149,28 +149,44 @@ void updateMovingAvg(uint8_t address)
         return;
     }
 
-    // Read accelerometer data starting from data start
-    getXYZ(address, data_buffer);
-
-    // Combine high and low bytes to form data
-    x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
-    y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
-    z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
-
     if (address == ACCEL_DATA)
     {
+        // Read accelerometer data starting from data start
+        getXYZ(address, data_buffer, 6);
+
+        // Combine high and low bytes to form data
+        x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
+        y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
+        z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
+
         updateAvg(&accel_avg_x, (int32_t)x);
         updateAvg(&accel_avg_y, (int32_t)y);
         updateAvg(&accel_avg_z, (int32_t)z);
     }
     else if (address == GYRO_DATA)
     {
+        // Read accelerometer data starting from data start
+        getXYZ(address, data_buffer, 6);
+
+        // Combine high and low bytes to form data
+        x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
+        y = (int16_t)((data_buffer[2] << 8) | data_buffer[3]);
+        z = (int16_t)((data_buffer[4] << 8) | data_buffer[5]);
+
         updateAvg(&gyro_avg_x, (int32_t)x);
         updateAvg(&gyro_avg_y, (int32_t)y);
         updateAvg(&gyro_avg_z, (int32_t)z);
     }
     else if (address == MAG_DATA)
     {
+        // Read accelerometer data starting from data start
+        getXYZ(address, data_buffer, 8);
+
+        // Combine high and low bytes to form data
+        x = (int16_t)((data_buffer[1] << 8) | data_buffer[2]);
+        y = (int16_t)((data_buffer[3] << 8) | data_buffer[4]);
+        z = (int16_t)((data_buffer[5] << 8) | data_buffer[6]);
+
         updateAvg(&mag_avg_x, (int32_t)x);
         updateAvg(&mag_avg_y, (int32_t)y);
         updateAvg(&mag_avg_z, (int32_t)z);
@@ -264,7 +280,7 @@ void logAvgSensorData(uint8_t address)
 void calculateAttitude(float loop_frequency)
 {
     // Read gyro data
-    getXYZ(GYRO_DATA, data_buffer);
+    getXYZ(GYRO_DATA, data_buffer, 6);
 
     // Combine high and low bytes to form data & apply offsets
     x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);
@@ -277,7 +293,7 @@ void calculateAttitude(float loop_frequency)
     float gyro_y_dps = y * GYRO_SCALE;
 
     // Read accel data
-    getXYZ(ACCEL_DATA, data_buffer);
+    getXYZ(ACCEL_DATA, data_buffer, 6);
 
     // Combine high and low bytes to form data
     x = (int16_t)((data_buffer[0] << 8) | data_buffer[1]);

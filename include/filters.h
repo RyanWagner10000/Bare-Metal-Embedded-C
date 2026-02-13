@@ -1,13 +1,13 @@
 /*
- * file: complimentary_filter.h
+ * file: filters.h
  * description: header file for a complimentary filer for the accel and gyro on the 9 DOF IMU
  * author: Ryan Wagner
  * date: January 20, 2026
  * notes:
  */
 
-#ifndef COMP_FILTER_H
-#define COMP_FILTER_H
+#ifndef FILTERS_H
+#define FILTERS_H
 
 #include <stdint.h>
 #include <math.h>
@@ -49,4 +49,4 @@ void logAvgSensorData(uint8_t address);
 void calculateAttitude(float loop_frequency);
 void logAttitude(void);
 
-#endif // COMP_FILTER_H
+#endif // FILTERS_H

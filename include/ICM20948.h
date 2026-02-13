@@ -42,11 +42,19 @@
 
 // Mag communication registers
 #define USER_CNTL (0x03)
+#define I2C_MST_ODR_CONFIG (0x00)
 #define I2C_MST_CTRL (0x01)
+#define I2C_MST_DELAY_CTRL (0x02)
+#define I2C_MST_STATUS (0x17)
 #define I2C_SLV0_ADDR (0x03)
 #define I2C_SLV0_REG (0x04)
 #define I2C_SLV0_CTRL (0x05)
 #define I2C_SLV0_DO (0x06)
+#define I2C_SLV4_ADDR (0x13)
+#define I2C_SLV4_REG (0x14)
+#define I2C_SLV4_CTRL (0x15)
+#define I2C_SLV4_DO (0x16)
+#define I2C_SLV4_DI (0x17)
 #define EXT_SLV_SENS_DATA_00 (0x3B)
 
 // Mag registers
@@ -56,9 +64,15 @@
 #define CNTL2 (0x31)
 #define CNTL3 (0x32)
 
+#define BANK_ZERO (0x00)
+#define BANK_ONE (0x10)
+#define BANK_TWO (0x20)
+#define BANK_THREE (0x30)
+
+
 void initICM20948(void);
-void printRegister(uint8_t address);
-void getXYZ(uint8_t address, uint8_t *data);
+void printRegister(uint8_t address, uint8_t bank);
+void getXYZ(uint8_t address, uint8_t *data, uint8_t length);
 void writeIsm20948(uint8_t address, uint8_t value);
 uint8_t readRegister(uint8_t address);
 
