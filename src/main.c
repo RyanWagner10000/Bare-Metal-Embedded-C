@@ -34,9 +34,9 @@ void initPeripherals(void)
 
     initUSART2();
 
-    initSPI();
-
-    initICM20948();
+    initSPI1();
+    initSPI2();
+    initSPI3();
 
     // Show success
     for (uint8_t i = 0; i < 5; i++)
@@ -88,17 +88,18 @@ int main(void)
             setImuFlag(0);
 
             // Complimentary filter
-            calculateAttitude(0.004);
+            // calculateAttitude(0.004);
         }
 
         if (run)
         {
-            // Print attitude to the screen
-            // logAttitude();
+            // Log IMU 1: Accel to screen
+            // Log IMU 1: Gyro to screen
+            // Log IMU 1: Mag to screen
 
-            logRawMagnetometer();
-            // logRawAccelerometer();
-            // logRawGyroscope();
+            // Log IMU 2: Accel to screen
+            // Log IMU 2: Gyro to screen
+            // Log IMU 2: Mag to screen
 
             // Toggle LED to show it's working
             toggleLED(GREEN_LED);

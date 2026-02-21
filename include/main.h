@@ -14,9 +14,9 @@
 #include "rcc.h"
 #include "timer.h"
 #include "usart.h"
-#include "adc.h"
-#include "spi.h"
+#include "spi1.h"
+#include "spi2.h"
+#include "spi3.h"
 #include "fpu.h"
-#include "filters.h"
 
 #endif // MAIN_H

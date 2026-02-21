@@ -1,12 +1,12 @@
 /*
- * file: cpi.c
- * description: file that contains the helper functions for SPI communciation protocol
+ * file: spi1.c
+ * description: file that contains the helper functions for SPI1 communciation protocol
  * author: Ryan Wagner
  * date: December 14, 2025
  * notes:
  */
 
-#include "spi.h"
+#include "spi1.h"
 
 /**
  * @brief Initalize SPI1 on PB3/4/5 with Chip Select on PB7 for IMU module
@@ -17,7 +17,7 @@
  *
  * @note Uses bus clock frequency / 16 for timing
  */
-void initSPI(void)
+void initSPI1(void)
 {
     // Enable clock to GPIOB
     RCC->AHB1ENR |= GPIOBEN;
@@ -28,25 +28,25 @@ void initSPI(void)
     // Set pin mode for PB3, PB4, PB5 to alternate function
     // Set pin mode for PB7 to output
     // Clear first
-    GPIOB->MODER &= ~(3U << 6);  // Clear 00
-    GPIOB->MODER &= ~(3U << 8);  // Clear 00
-    GPIOB->MODER &= ~(3U << 10); // Clear 00
-    GPIOB->MODER &= ~(3U << 14); // Clear 00
+    GPIOB->MODER &= ~(3U << 6);  // Clear 0b00
+    GPIOB->MODER &= ~(3U << 8);  // Clear 0b00
+    GPIOB->MODER &= ~(3U << 10); // Clear 0b00
+    GPIOB->MODER &= ~(3U << 14); // Clear 0b00
     // Then set
-    GPIOB->MODER |= (2U << 6);  // AF mode 10
-    GPIOB->MODER |= (2U << 8);  // AF mode 10
-    GPIOB->MODER |= (2U << 10); // AF mode 10
-    GPIOB->MODER |= (1U << 14); // Output mode 01
+    GPIOB->MODER |= (2U << 6);  // AF mode 0b10
+    GPIOB->MODER |= (2U << 8);  // AF mode 0b10
+    GPIOB->MODER |= (2U << 10); // AF mode 0b10
+    GPIOB->MODER |= (1U << 14); // Output mode 0b01
 
     // Set alternate function mode for PB3, PB4, PB5
     // Clear first
-    GPIOB->AFRL &= ~(15U << 12); // Clear 0000
-    GPIOB->AFRL &= ~(15U << 16); // Clear 0000
-    GPIOB->AFRL &= ~(15U << 20); // Clear 0000
+    GPIOB->AFRL &= ~(15U << 12); // Clear 0b0000
+    GPIOB->AFRL &= ~(15U << 16); // Clear 0b0000
+    GPIOB->AFRL &= ~(15U << 20); // Clear 0b0000
     // Then set
-    GPIOB->AFRL |= (5U << 12); // AFRL3 -> 0101 = AF5
-    GPIOB->AFRL |= (5U << 16); // AFRL4 -> 0101 = AF5
-    GPIOB->AFRL |= (5U << 20); // AFRL5 -> 0101 = AF5
+    GPIOB->AFRL |= (5U << 12); // AFRL3 -> 0b0101 = AF5
+    GPIOB->AFRL |= (5U << 16); // AFRL4 -> 0b0101 = AF5
+    GPIOB->AFRL |= (5U << 20); // AFRL5 -> 0b0101 = AF5
 
     // Initialize CS Pin to high
     GPIOB->ODR |= (1U << 7);
@@ -55,7 +55,6 @@ void initSPI(void)
     SPI1->CR1 = 0x0000;
 
     // Set clock to fPCLK/16 (BR = 011)
-    SPI1->CR1 &= ~(7U << 3); // Clear BR[2:0]
     SPI1->CR1 |= (3U << 3);  // Set BR = 011 = /16
 
     // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
@@ -88,7 +87,7 @@ void initSPI(void)
  *
  * @return None
  */
-void transmitSPI(uint8_t *address, uint32_t size)
+void transmitSPI1(uint8_t *address, uint32_t size)
 {
     uint32_t i = 0;
     uint8_t temp;
@@ -123,12 +122,12 @@ void transmitSPI(uint8_t *address, uint32_t size)
 /**
  * @brief Receives messages on the SPI1 peripheral
  *
- * @param address Array of addresses to recieve
- * @param size Size of array messages to recieve
+ * @param data Array for recieve data
+ * @param size Size of array to recieve
  *
  * @return None
  */
-void receiveSPI(uint8_t *address, uint32_t size)
+void receiveSPI1(uint8_t *data, uint32_t size)
 {
     while (size)
     {
@@ -144,7 +143,7 @@ void receiveSPI(uint8_t *address, uint32_t size)
             ;
 
         // Read data from register
-        *address++ = (SPI1->DR);
+        *data++ = (SPI1->DR);
         size--;
     }
     return;
@@ -157,10 +156,11 @@ void receiveSPI(uint8_t *address, uint32_t size)
  *
  * @return None
  */
-void enableCS(void)
+void enableCS_SPI1(void)
 {
     // Turn on SPI to device
-    GPIOB->ODR &= ~(1U << 7);
+    GPIOB->ODR &= ~SPI1_CS;
+
     // Small delay
     for (volatile uint8_t i; i < 10; i++)
         ;
@@ -175,13 +175,15 @@ void enableCS(void)
  *
  * @return None
  */
-void disableCS(void)
+void disableCS_SPI1(void)
 {
+    
+    // Turn off SPI to device
+    GPIOB->ODR |= SPI1_CS;
+    
     // Small delay
     for (volatile uint8_t i; i < 10; i++)
         ;
-    // Turn off SPI to device
-    GPIOB->ODR |= (1U << 7);
 
     return;
 }

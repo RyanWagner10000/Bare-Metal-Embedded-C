@@ -1,22 +1,23 @@
 /*
- * file: spi.h
- * description: header file for SPI peripheral structure
+ * file: spi3.h
+ * description: header file for SPI3 peripheral structure
  * author: Ryan Wagner
- * date: December 14, 2025
+ * date: February 14, 2025
  * notes:
  */
 
-#ifndef SPI_H
-#define SPI_H
+#ifndef SPI3_H
+#define SPI3_H
 
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
 
-#define SPI1_BASE 0x40013000
-#define SPI1_EN (1U << 12)
+#define SPI3_BASE 0x40003C00
+#define SPI3_EN (1U << 15)
+#define SPI3_CS (1U << 13)
 
-#define SPI1 ((SPI_TypeDef *)(SPI1_BASE))
+#define SPI3 ((SPI3_TypeDef *)(SPI3_BASE))
 
 typedef struct
 {
@@ -29,12 +30,12 @@ typedef struct
     volatile uint32_t TXCRCR;  // offset: 0x18
     volatile uint32_t I2SCFGR; // offset: 0x1C
     volatile uint32_t I2SPR;   // offset: 0x20
-} SPI_TypeDef;
+} SPI3_TypeDef;
 
-void initSPI(void);
-void transmitSPI(uint8_t *address, uint32_t size);
-void receiveSPI(uint8_t *address, uint32_t size);
-void enableCS(void);
-void disableCS(void);
+void initSPI3(void);
+void transmitSPI3(uint8_t *address, uint32_t size);
+void receiveSPI3(uint8_t *address, uint32_t size);
+void enableCS_SPI3(void);
+void disableCS_SPI3(void);
 
-#endif // SPI_H
+#endif // SPI3_H

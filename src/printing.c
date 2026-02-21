@@ -191,3 +191,36 @@ void floatToStr(float n, char *buffer, uint32_t afterpoint)
 
     return;
 }
+
+/**
+ * @brief Output contents of register to temrinal via USART2
+ *
+ * @note This is primarily used for debugging purposes, just to make sure you're seeing the raw values you'd expect
+ *
+ * @param address Address of register read from
+ * @param data Data read from address
+ *
+ * @return None
+ */
+void printRegister(uint8_t address, uint8_t data)
+{
+    // Char arrays to hold number
+    char data_str[MAX_INT_STRING];
+    char addr_str[MAX_INT_STRING];
+    char concat[MAX_STRING_CONCAT];
+
+    // Convert ints to strings
+    intToStr((int32_t)data, data_str);
+    intToStr((int32_t)address, addr_str);
+
+    // Concatenate the strings together
+    strConcat("Register ", addr_str, concat);
+    strConcat(concat, " = ", concat);
+    strConcat(concat, data_str, concat);
+    strConcat(concat, "\n", concat);
+
+    // Print to terminal
+    usartWriteString(concat);
+
+    return;
+}

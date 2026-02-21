@@ -10,7 +10,7 @@
 #define ICM20948_H
 
 #include <stdint.h>
-#include "spi.h"
+#include "spi1.h"
 #include "printing.h"
 #include "usart.h"
 #include "timer.h"

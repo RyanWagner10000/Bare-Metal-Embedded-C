@@ -51,105 +51,81 @@ The goal is to make an autonomous drone, but if that doesn't happen it's okay. I
 
 ## External Components
 
-### ICM 20948 9-DOF IMU
+### BerryIMU v3 10-DOF IMU
 
 ##### Links
 
-| [Overview](https://learn.adafruit.com/adafruit-tdk-invensense-icm-20948-9-dof-imu/overview) | [Datasheet](https://invensense.tdk.com/wp-content/uploads/2016/06/DS-000189-ICM-20948-v1.3.pdf) | [Pinout](https://learn.adafruit.com/adafruit-tdk-invensense-icm-20948-9-dof-imu/pinouts) |
+| [Overview](https://ozzmaker.com/product/berryimu-accelerometer-gyroscope-magnetometer-barometricaltitude-sensor/) | [Pinout](https://ozzmaker.com/wp-content/uploads/2020/08/BerryIMUv3Raspberry.png) | [SPI Setup](https://ozzmaker.com/connecting-berryimuv3-via-spi-to-a-raspberry-pi/)
+
+| [LSM6DSL](https://ozzmaker.com/wp-content/uploads/2020/08/lsm6dsl-datasheet.pdf) | [LIS3MDL](https://ozzmaker.com/wp-content/uploads/2020/08/lis3mdl.pdf) | [BM388](https://ozzmaker.com/wp-content/uploads/2020/02/BMP388-ds001.pdf) |
 
 ##### Description
 
-This is a very cheap IMU that probably isn't the best for a drone, but it's what I had lying around and it does the trick. Nonetheless, it has a 3-axis accelerometer, gyroscope, and magnetometer, as well as a temperature sensor if you choose to add that into your filter bias calculations.
+This board is an Inertial Measurement Unit (IMU) which incorporates an accelerometer, gyroscope, magnetometer, barometer, and temperature sensor all on the same board. Typically, these combination of sensors are used in conjection to calculate the orientation of the board in 3D space, but it can also be used for general tilt sensing, pedometers, tap sensing, etc. This project will use this board to estimate the 3D orientation of the quadcopter in real-time.
 
 ##### Configuration
 
-###### Accelerometer
-
-The accelerometer is configured such that the sample rate is reduced by a factor of 10; the initial sample rate is 1.125 kHz, and I'm reducing it down to 112.5 Hz. I did this to make it easier to poll the module and get it's values for the complimentary filter.
-
-The built-in digital low pass filter is enabled and set to 11.5Hz 3dB BW and 17.0Hz NBW, and the scale is set to &plusmn;2g.
-
-The accelerometer also has a 32x averaging applied automatically on the module.
-
-###### Gyroscope
-
-The gyroscope is configured such that the sample rate is reduced by a factor of 5; the initial sample rate is 1.1 kHz, and I'm reducing it down to 220 Hz. I did this to make it easier to poll the module and get it's values for the complimentary filter.
-
-The built-in digital low pass filter is enabled and set to 11.6Hz 3dB BW and 17.8Hz NBW, and the scale is set to &plusmn;250dps.
-
-The gyro also has an 8x averaging applied automatically on the module.
-
-###### Magnetometer
+###### Accelerometer (LSM6DSL)
 
 Coming soon!
 
-###### Temperature
+###### Gyroscope (LSM6DSL)
+
+Coming soon!
+
+###### Magnetometer (LIS3MDL)
+
+Coming soon!
+
+###### Pressure (BM388)
 
 Coming soon!
 
 ---
 
-### Motor Driving Board
-
-##### Links
-
-* [Coming Soon](https://google.com)
+### Electronic Speed Controller (ESC) - [Link](https://www.hobbywingdirect.com/products/skywalker-esc-30a?srsltid=AfmBOoo4jPsj8Cw2gNXTsvY-Jg083MuQC2i5FRH6rTTn0dHf2sIzp6eH)
 
 ##### Description
 
-Coming soon!
+This ESC is a simple, entry-level motor controller, but has been over-spec-ed to account for any voltage spikes that could occur. These ESC's also come with two leads for and extra BEC line and a programming line. The BEC line supports up to 5V 5A and will hopefully be used to power some LED's on the arms of the quadcopter.
 
 ---
 
 
-### Motors
-
-##### Links
-
-* [Coming Soon](https://google.com)
+### Motor - SunnySky X2212 980KV - [Link](https://sunnyskyusa.com/products/sunnysky-x2212-brushless-motors-new?srsltid=AfmBOooHTCWo2V5ESi72pRGVuCphP4LgCLehmAm6OVzSersa_RpPchxA)
 
 ##### Description
 
-Coming soon!
+This motor is a small, entry-level, torque focused motor. A 980 KV is more tuned to be a "heavy lifting" motor because it has a lower KV; a lower KV translates to a lower max RPM with the following equation of operating voltage * KV: 14.8 (V) * 980 (RPM/V) = 14,504 RPM. This drone build was not designed to be a racing drone, but something more stable just for show and experimentation. Two Cloackwise (CW) and Counterclockwise (CCW) motors were chosen for this build with a blades out configuration. It's possible to just buy all the same CW or CCW motor and swap the set of power leads to two of the motors (to spin in reverse), but I didn't want do that and just wanted to wire things normally. More physical and electrical motor specifications can be found at the link above.
 
 ---
 
 
-### RF Transceiver
-
-##### Links
-
-* [Coming Soon](https://google.com)
+### RF Transceiver - NRF24L01+PA+LNA - [Link](https://www.amazon.com/gp/product/B07ZGQ2X7Q/ref=ox_sc_act_title_2?smid=A1VTL661FOEJB1&psc=1)
 
 ##### Description
 
-Coming soon!
+This is a small radio module that operates in the 2.4 GHz range. This project will be using two of these; one for the ground station and one for the drone. Please make sure that you check out your regions radio frequency spectrum laws so that you aren't transmitting at a frequency you shouldn't be. For the US, the 2.4-2.4835 GHz range is a license-free Industrial, Scientific, and Medical (ISM) radio band.
+
+This board is equipt with a Power Amplifier (PA) and Low Noise Amplifier (LNA) which are used to increase signal strength and reduce accumulated interference, reqpectively; these two features mainly extend the effective range of the board which is listed at about ~1 km. It's also rated to support 250kbps-2Mbps data rates depending on configuration. This model also has 125 channels which supports mesh networks of these modules.
 
 ---
 
 
-### Battery Pack
-
-##### Links
-
-* [Coming Soon](https://google.com)
+### Battery Pack - [Link](https://genstattu.com/tattu-2300mah-4s-75c-lipo-battery-pack-with-xt60-plug/?srsltid=AfmBOorbmZlas45tGu5uICt_1vnR04mdFqh8_4CqffeuCL02hHuqwY0q)
 
 ##### Description
 
-Coming soon!
+This is a 4S or 4 cell battery with a voltage of 14.8V and 2300mAh capacity. It's not the biggest battery that I could put on this drone, but it's good enough for testing purposes.
 
 ---
 
 
-### Power Controller
-
-##### Links
-
-* [Coming Soon](https://google.com)
+### Power Distribution Board - [Link](https://speedyfpv.com/products/drone-power-distribution-board-xt60-3-4s-9-18v-5v-12v-output-pdb?variant=8596736049203)
 
 ##### Description
 
-Coming soon!
+This board does as the name suggests: it distributes the power to all the connected components. It takes in the power of the battery, and safely sends it out to the flight controller, ESC's/motors, and anything else. The board has the capability to support up to six motors, but this build will only be using four; note that the maximum amperage rated for six motor use is less than that of four motor use.
 
 ---
 

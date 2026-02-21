@@ -10,6 +10,7 @@
 #define PRINTING_H
 
 #include <stdint.h>
+#include "usart.h"
 
 #define MAX_STRING_CONCAT (512)
 #define MAX_FLOAT_STRING (64)
@@ -19,5 +20,6 @@ uint32_t getStringLength(const char *s);
 uint32_t intToStr(int32_t n, char *buffer);
 void floatToStr(float n, char *res, uint32_t afterpoint);
 void strConcat(char *str1, char *str2, char *concat);
+void printRegister(uint8_t address, uint8_t data);
 
 #endif // PRINTING_H

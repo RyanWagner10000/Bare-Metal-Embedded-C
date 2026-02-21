@@ -29,13 +29,13 @@ void writeIsm20948(uint8_t address, uint8_t value)
     data[1] = value;
 
     // Pull CS line low to enable slave device
-    enableCS();
+    enableCS_SPI1();
 
     // Transmit data and address
-    transmitSPI(data, 2);
+    transmitSPI1(data, 2);
 
     // Pull CS line high to disable slave device
-    disableCS();
+    disableCS_SPI1();
 }
 
 /**
@@ -51,47 +51,12 @@ uint8_t readRegister(uint8_t address)
 
     address |= READ_OPERATION;
 
-    enableCS();
-    transmitSPI(&address, 1);
-    receiveSPI(&data, 1);
-    disableCS();
+    enableCS_SPI1();
+    transmitSPI1(&address, 1);
+    receiveSPI1(&data, 1);
+    disableCS_SPI1();
 
     return data;
-}
-
-/**
- * @brief Output contents of register to temrinal via USART2
- *
- * @note This is primarily used ofr debugging purposes, just to make sure you're seeing the raw values you'd expect
- *
- * @param address Address of register on IMU module
- *
- * @return None
- */
-void printRegister(uint8_t address, uint8_t bank)
-{
-    // Change to necessary bank for register
-    writeIsm20948(REG_BANK_SEL, bank);
-    delayMillisecond(delay_time);
-
-    uint8_t data = readRegister(address);
-
-    // Change bank to 0
-    writeIsm20948(REG_BANK_SEL, BANK_ZERO);
-    delayMillisecond(delay_time);
-
-    char data_str[MAX_FLOAT_STRING];
-    char addr_str[MAX_FLOAT_STRING];
-    char concat[MAX_STRING_CONCAT];
-    intToStr((int32_t)data, data_str);
-    intToStr((int32_t)address, addr_str);
-    strConcat("Register ", addr_str, concat);
-    strConcat(concat, " = ", concat);
-    strConcat(concat, data_str, concat);
-    strConcat(concat, "\n", concat);
-    usartWriteString(concat);
-
-    return;
 }
 
 /**
@@ -105,19 +70,19 @@ void printRegister(uint8_t address, uint8_t bank)
 void getXYZ(uint8_t address, uint8_t *data, uint8_t length)
 {
     // Enable communication by pulling line low
-    enableCS();
+    enableCS_SPI1();
 
     // Set read operation
     address |= READ_OPERATION;
 
     // Send communication to recieve acceleromter data
-    transmitSPI(&address, 1);
+    transmitSPI1(&address, 1);
 
     // Receive acceleromter data
-    receiveSPI(data, length);
+    receiveSPI1(data, length);
 
     // Disable communication by pulling line high
-    disableCS();
+    disableCS_SPI1();
 
     return;
 }
@@ -311,24 +276,11 @@ void initICM20948Magnetometer(void)
     writeIsm20948(I2C_SLV0_CTRL, 0x88);
     delayMillisecond(delay_time * 10);
 
-    printRegister(I2C_SLV0_ADDR, BANK_THREE);
-    delayMillisecond(delay_time);
-
-    printRegister(I2C_SLV0_REG, BANK_THREE);
-    delayMillisecond(delay_time);
-
-    printRegister(I2C_SLV0_CTRL, BANK_THREE);
-    delayMillisecond(delay_time);
-
-    printRegister(I2C_MST_STATUS, BANK_ZERO);
-    delayMillisecond(delay_time);
-
     // Read magnetometer data
     for (int8_t i = 0; i < 8; i++)
     {
         // data_buffer[i] = readRegister(EXT_SLV_SENS_DATA_00 + i);
         usartWriteNumber((int16_t)i);
-        printRegister(EXT_SLV_SENS_DATA_00 + i, BANK_ZERO);
     }
     return;
 
@@ -348,7 +300,7 @@ void initICM20948(void)
 {
 
     // Initialize SPI1 interface
-    initSPI();
+    initSPI1();
 
     // Reset ICM 20948
     writeIsm20948(PWR_MGMT_1, 0x80);
@@ -404,7 +356,6 @@ void logRawMagnetometer(void)
     {
         // data_buffer[i] = readRegister(EXT_SLV_SENS_DATA_00 + i);
         usartWriteNumber((int16_t)i);
-        printRegister(EXT_SLV_SENS_DATA_00 + i, BANK_ZERO);
     }
     return;
 
