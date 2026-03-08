@@ -10,7 +10,7 @@
 #define ICM20948_H
 
 #include <stdint.h>
-#include "spi.h"
+#include "spi1.h"
 #include "printing.h"
 #include "usart.h"
 #include "timer.h"
@@ -71,7 +71,6 @@
 
 
 void initICM20948(void);
-void printRegister(uint8_t address, uint8_t bank);
 void getXYZ(uint8_t address, uint8_t *data, uint8_t length);
 void writeIsm20948(uint8_t address, uint8_t value);
 uint8_t readRegister(uint8_t address);

@@ -191,3 +191,76 @@ void floatToStr(float n, char *buffer, uint32_t afterpoint)
 
     return;
 }
+
+/**
+ * @brief Output contents of register to temrinal via USART2
+ *
+ * @param address Address of register read from
+ * @param data Data read from address
+ * @param format Format to print the data (Decimal, Hex, Binary)
+ *
+ * @return None
+ */
+void printRegister(uint8_t address, uint32_t data, uint8_t format)
+{
+    switch (format)
+    {
+    case DECIMAL:
+    {
+        // Char arrays to hold number
+        char data_str[MAX_INT_STRING];
+        char addr_str[MAX_INT_STRING];
+        char concat[MAX_STRING_CONCAT];
+
+        // Convert ints to strings
+        intToStr((int32_t)data, data_str);
+        intToStr((int32_t)address, addr_str);
+
+        // Concatenate the strings together
+        strConcat("Register ", addr_str, concat);
+        strConcat(concat, " = ", concat);
+        strConcat(concat, data_str, concat);
+        strConcat(concat, "\n", concat);
+
+        // Print to terminal
+        usartWriteString(concat);
+        break;
+    }
+    case HEX:
+    {
+        break;
+    }
+    case BINARY:
+    {
+        // Char arrays to hold number
+        char addr_str[MAX_INT_STRING];
+        char concat[MAX_STRING_CONCAT];
+
+        // Concatenate the strings together
+        strConcat("Register ", addr_str, concat);
+        strConcat(concat, " = ", concat);
+
+        // Print individual bits
+        int32_t bit = 0;
+        char buffer[2];
+        for (int8_t i = 31; i >= 0; i--) {
+            bit = (data >> i) & 1 ? '1' : '0';
+            intToStr(bit, buffer);
+            strConcat(concat, buffer, concat);
+        }
+        strConcat(concat, "\n", concat);
+
+        // Print to terminal
+        usartWriteString(concat);
+
+        break;
+    }
+    default:
+    {
+        usartWriteString("Format to print not known.\n");
+        return;
+    }
+    }
+
+    return;
+}
