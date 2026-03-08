@@ -158,7 +158,7 @@ void enableCS_SPI3(void)
     // Turn on SPI to device
     GPIOC->ODR &= ~SPI3_CS;
     // Small delay
-    for (volatile uint8_t i; i < 10; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;
@@ -179,7 +179,7 @@ void disableCS_SPI3(void)
     // Turn off SPI to device
     GPIOC->ODR |= SPI3_CS;
     // Small delay
-    for (volatile uint8_t i; i < 10; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;

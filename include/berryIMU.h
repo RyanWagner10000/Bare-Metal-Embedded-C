@@ -115,11 +115,11 @@
 #define Y_OFS_USR (0x74)
 #define Z_OFS_USR (0x75)
 
-void initAccelerometer(void);
-void initGyroscope(void);
-void initMagnetometer(void);
 void initBerryIMU(void);
-void writeBerryIMU(uint8_t imu_num, uint8_t address, uint8_t data);
-void readBerryIMU(uint8_t imu_num, uint8_t address, uint8_t *data, uint32_t size);
+uint8_t getWhoAmIxlgy(uint8_t imu_num);
+void logRawAccelData(uint8_t imu_num, int16_t *data);
+uint8_t statusGyro(uint8_t imu_num);
+uint8_t statusAccel(uint8_t imu_num);
+void getAccelData(uint8_t imu_num, int16_t *xyz);
 
 #endif // BERRYIMU_H

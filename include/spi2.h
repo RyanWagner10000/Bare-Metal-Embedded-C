@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
+#include "printing.h"
 
 #define SPI2_BASE 0x40003800
 #define SPI2_EN (1U << 14)

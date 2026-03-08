@@ -33,13 +33,15 @@ void initPeripherals(void)
     initPushButton();
 
     initUSART2();
+    usartWriteString("Testing USART Connection!\n");
 
     initSPI1();
     initSPI2();
-    initSPI3();
+
+    // initBerryIMU();
 
     // Show success
-    for (uint8_t i = 0; i < 5; i++)
+    for (uint8_t i = 0; i < 2; i++)
     {
         onLED(GREEN_LED);
         for (uint32_t j = 0; j < 100000; j++)
@@ -66,8 +68,28 @@ int main(void)
     // Get and set inital state
     uint32_t button_state = getButtonState();
     uint8_t run = 0;
+    // int16_t imu1_xl_data[3];
+    // int16_t imu2_xl_data[3];
 
     offLED(GREEN_LED);
+    offLED(RED_LED);
+    offLED(ORANGE_LED);
+    offLED(BLUE_LED);
+
+    volatile uint8_t temp2 = 0;
+    temp2 = getWhoAmIxlgy(IMU1);
+    usartWriteString("IMU1 Acc & Gyro ID: ");
+    usartWriteNumber(temp2);
+    usartWriteString("Expected ID: ");
+    usartWriteNumber(0x6A);
+
+    // volatile uint8_t temp2 = 0;
+    temp2 = 0;
+    temp2 = getWhoAmIxlgy(IMU2);
+    usartWriteString("IMU2 Acc & Gyro ID: ");
+    usartWriteNumber(temp2);
+    usartWriteString("Expected ID: ");
+    usartWriteNumber(0x6A);
 
     while (1)
     {
@@ -88,12 +110,22 @@ int main(void)
             setImuFlag(0);
 
             // Complimentary filter
-            // calculateAttitude(0.004);
+            // logRawAccelData(IMU1, imu1_xl_data);
+            // logRawAccelData(IMU2, imu2_xl_data);
         }
 
         if (run)
         {
+            temp2 = getWhoAmIxlgy(IMU1);
+            usartWriteString("\nIMU1 Acc & Gyro ID: ");
+            usartWriteNumber(temp2);
+            temp2 = getWhoAmIxlgy(IMU2);
+            usartWriteString("IMU2 Acc & Gyro ID: ");
+            usartWriteNumber(temp2);
+
             // Log IMU 1: Accel to screen
+            // logRawAccelData(IMU2, imu2_xl_data);
+
             // Log IMU 1: Gyro to screen
             // Log IMU 1: Mag to screen
 
@@ -103,6 +135,7 @@ int main(void)
 
             // Toggle LED to show it's working
             toggleLED(GREEN_LED);
+            delayMillisecond(25);
         }
     }
 }

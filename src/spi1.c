@@ -49,16 +49,16 @@ void initSPI1(void)
     GPIOB->AFRL |= (5U << 20); // AFRL5 -> 0b0101 = AF5
 
     // Initialize CS Pin to high
-    GPIOB->ODR |= (1U << 7);
+    GPIOB->ODR |= SPI1_CS;
 
     // Clear config to init
     SPI1->CR1 = 0x0000;
 
     // Set clock to fPCLK/16 (BR = 011)
-    SPI1->CR1 |= (3U << 3);  // Set BR = 011 = /16
+    SPI1->CR1 |= (3U << 3); // Set BR = 011 = /16
 
-    // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
-    SPI1->CR1 &= ~(3U << 0);
+    // Set CPHA and CPOL to 1 (Mode 3) to determine behavior
+    SPI1->CR1 |= (3U << 0);
 
     // Enable FULL duplex
     // SPI1->CR1 &= ~(1U << 10);
@@ -90,7 +90,6 @@ void initSPI1(void)
 void transmitSPI1(uint8_t *address, uint32_t size)
 {
     uint32_t i = 0;
-    uint8_t temp;
 
     while (i < size)
     {
@@ -112,9 +111,11 @@ void transmitSPI1(uint8_t *address, uint32_t size)
         ;
 
     // Clear OVR flag
-    temp = SPI1->DR;
-    temp = SPI1->SR;
-    temp++;
+    // Drain the RX buffer of the junk byte clocked in during TX
+    while (SPI1->SR & (1U << 0)) {
+        (void)SPI1->DR;
+    }
+    (void)SPI1->SR; // Clear OVR
 
     return;
 }
@@ -143,7 +144,7 @@ void receiveSPI1(uint8_t *data, uint32_t size)
             ;
 
         // Read data from register
-        *data++ = (SPI1->DR);
+        *data++ = (uint8_t)(SPI1->DR);
         size--;
     }
     return;
@@ -162,7 +163,7 @@ void enableCS_SPI1(void)
     GPIOB->ODR &= ~SPI1_CS;
 
     // Small delay
-    for (volatile uint8_t i; i < 10; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;
@@ -177,12 +178,12 @@ void enableCS_SPI1(void)
  */
 void disableCS_SPI1(void)
 {
-    
+
     // Turn off SPI to device
     GPIOB->ODR |= SPI1_CS;
-    
+
     // Small delay
-    for (volatile uint8_t i; i < 10; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;

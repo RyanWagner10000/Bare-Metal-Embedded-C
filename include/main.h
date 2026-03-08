@@ -14,9 +14,7 @@
 #include "rcc.h"
 #include "timer.h"
 #include "usart.h"
-#include "spi1.h"
-#include "spi2.h"
-#include "spi3.h"
+#include "berryIMU.h"
 #include "fpu.h"
 
 #endif // MAIN_H

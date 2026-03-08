@@ -49,16 +49,20 @@ void initSPI2(void)
     GPIOB->AFRH |= (5U << 28); // AFRL15 -> 0b0101 = AF5
 
     // Initialize CS Pin to high
-    GPIOB->ODR |= (1U << 12);
+    GPIOB->ODR |= SPI2_CS;
 
     // Clear config to init
     SPI2->CR1 = 0x0000;
 
     // Set clock to fPCLK/16 (BR = 011)
-    SPI2->CR1 |= (3U << 3); // Set BR = 011 = /16
+    SPI2->CR1 |= (3U << 3);
 
     // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
-    SPI2->CR1 &= ~(3U << 0);
+    // SPI2->CR1 &= ~(3U << 0);
+    SPI2->CR1 |= (3U << 0);
+
+    // Enable FULL duplex
+    // SPI1->CR1 &= ~(1U << 10);
 
     // Set MSB first
     SPI2->CR1 &= ~(1U << 7);
@@ -87,7 +91,7 @@ void initSPI2(void)
 void transmitSPI2(uint8_t *address, uint32_t size)
 {
     uint32_t i = 0;
-    uint8_t temp;
+    address++;
 
     while (i < size)
     {
@@ -96,7 +100,8 @@ void transmitSPI2(uint8_t *address, uint32_t size)
             ;
 
         // Write data to register
-        SPI2->DR = address[i];
+        // SPI2->DR = address[i];
+        SPI2->DR = 0x8F;
         i++;
     }
 
@@ -109,9 +114,13 @@ void transmitSPI2(uint8_t *address, uint32_t size)
         ;
 
     // Clear OVR flag
-    temp = SPI2->DR;
-    temp = SPI2->SR;
-    temp++;
+    // Drain the RX buffer of the junk byte clocked in during TX
+    while (SPI2->SR & (1U << 0))
+    {
+        (void)SPI2->DR;
+    }
+
+    // (void)SPI2->SR; // Clear OVR
 
     return;
 }
@@ -140,9 +149,14 @@ void receiveSPI2(uint8_t *data, uint32_t size)
             ;
 
         // Read data from register
-        *data++ = (SPI2->DR);
+        *data++ = (uint8_t)(SPI2->DR);
         size--;
     }
+
+    // Wait for BUSY flag to reset
+    while ((SPI2->SR & (1U << 7)))
+        ;
+
     return;
 }
 
@@ -156,9 +170,9 @@ void receiveSPI2(uint8_t *data, uint32_t size)
 void enableCS_SPI2(void)
 {
     // Turn on SPI to device
-    GPIOB->ODR &= ~SPI2_CS;
+    GPIOB->ODR &= ~(SPI2_CS);
     // Small delay
-    for (volatile uint8_t i; i < 10; i++)
+    for (volatile uint32_t i = 0; i < 10000; i++)
         ;
 
     return;
@@ -173,13 +187,10 @@ void enableCS_SPI2(void)
  */
 void disableCS_SPI2(void)
 {
-    // Small delay
-    for (volatile uint8_t i; i < 10; i++)
-        ;
     // Turn off SPI to device
     GPIOB->ODR |= SPI2_CS;
     // Small delay
-    for (volatile uint8_t i; i < 10; i++)
+    for (volatile uint32_t i = 0; i < 10000; i++)
         ;
 
     return;

@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
+#include "printing.h"
 
 #define SPI1_BASE 0x40013000
 #define SPI1_EN (1U << 12)

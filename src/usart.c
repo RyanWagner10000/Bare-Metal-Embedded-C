@@ -19,33 +19,34 @@ void initUSART2(void)
 {
     // Allow clock access to USART2 on bus APB1
     RCC->APB1ENR |= (1U << 17);
-    // Allow clock access to GPIOD on bus AHB1
-    RCC->AHB1ENR |= (1U << 3);
+    // Allow clock access to GPIOA on bus AHB1
+    RCC->AHB1ENR |= (1U << 0);
 
-    // Set USART2 PD5 & PD6 Pin Mode
-    GPIOD->MODER |= (1U << 11);
-    GPIOD->MODER &= ~(1U << 10);
-    GPIOD->MODER |= (1U << 13);
-    GPIOD->MODER &= ~(1U << 12);
+    // Set USART2 PA2 & PA3 Pin Mode
+    GPIOA->MODER |= (1U << 7);
+    GPIOA->MODER &= ~(1U << 6);
+    GPIOA->MODER |= (1U << 5);
+    GPIOA->MODER &= ~(1U << 4);
 
     // Set USART2 alternate function mode
-    // AF7 for PD5
-    GPIOD->AFRL &= ~(1U << 23);
-    GPIOD->AFRL |= (1U << 22);
-    GPIOD->AFRL |= (1U << 21);
-    GPIOD->AFRL |= (1U << 20);
-    // AF7 for PD6
-    GPIOD->AFRL &= ~(1U << 27);
-    GPIOD->AFRL |= (1U << 26);
-    GPIOD->AFRL |= (1U << 25);
-    GPIOD->AFRL |= (1U << 24);
+    // AF7 for PA3
+    GPIOA->AFRL &= ~(1U << 15);
+    GPIOA->AFRL |= (7U << 12);
+    // AF7 for PA2
+    GPIOA->AFRL &= ~(1U << 11);
+    GPIOA->AFRL |= (7U << 8);
 
     // Configure baud: 104.1875 From table 137 page 984
-    USART2->BRR = 0x0683;
+    // 9.6 KBps -> ~9.598 KBps 0.02% Error
+    // USART2->BRR = 0x0683;
+    
+    // Configure baud: 8.6875 From table 139 page 984
+    // 115.2KBps -> 15.108 KBps 0.08% Error
+    USART2->BRR = 0x008B;
 
     // Enable Tx and Rx on CR1
-    USART2->CR1 |= (1U << 3);
-    USART2->CR1 |= (1U << 2);
+    USART2->CR1 |= (1U << 3); // Tx
+    USART2->CR1 |= (1U << 2); // Rx
 
     // Enable USART2
     USART2->CR1 |= (1U << 13);
@@ -109,11 +110,11 @@ void usartWriteChar(uint8_t character)
 /**
  * @brief Write an integer to the USART2 peripheral
  *
- * @param value Signed 16-bit integer to "print" to the terminal
+ * @param value Unsigned 8-bit integer to "print" to the terminal
  *
  * @return None
  */
-void usartWriteNumber(int16_t value)
+void usartWriteNumber(uint32_t value)
 {
     char buffer[12]; // Max 10 digits for uint32_t + null terminator + 1 extra
     int i = 0;
@@ -121,7 +122,7 @@ void usartWriteNumber(int16_t value)
     // Handle zero case
     if (value == 0)
     {
-        usartWriteChar('0');
+        usartWriteString("0\n");
         return;
     }
 
@@ -137,6 +138,8 @@ void usartWriteNumber(int16_t value)
     {
         usartWriteChar(buffer[--i]);
     }
+
+    usartWriteChar('\n');
 }
 
 /**
@@ -146,13 +149,11 @@ void usartWriteNumber(int16_t value)
  *
  * @return An unsigned 32-bit integer
  */
-uint32_t usart2Read(void)
+uint16_t usart2Read(void)
 {
     // Make sure the receive data register is NOT empty
     while (!(USART2->SR & (1U << 5)))
         ;
 
-    uint32_t data = USART2->DR;
-
-    return data;
+    return (uint16_t)USART2->DR;
 }

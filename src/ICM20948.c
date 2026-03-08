@@ -280,7 +280,7 @@ void initICM20948Magnetometer(void)
     for (int8_t i = 0; i < 8; i++)
     {
         // data_buffer[i] = readRegister(EXT_SLV_SENS_DATA_00 + i);
-        usartWriteNumber((int16_t)i);
+        usartWriteNumber((uint8_t)i);
     }
     return;
 
@@ -355,7 +355,7 @@ void logRawMagnetometer(void)
     for (int8_t i = 0; i < 8; i++)
     {
         // data_buffer[i] = readRegister(EXT_SLV_SENS_DATA_00 + i);
-        usartWriteNumber((int16_t)i);
+        usartWriteNumber((uint8_t)i);
     }
     return;
 
