@@ -6,8 +6,8 @@
  * notes:
  */
 
-#ifndef timer_H
-#define timer_H
+#ifndef TIMER_H
+#define TIMER_H
 
 #include <stdint.h>
 #include "rcc.h"
@@ -52,4 +52,4 @@ void initTimer2(void);
 void initTimer5(void);
 void delayMillisecond(uint32_t num_milliseconds);
 
-#endif // timer_H
+#endif // TIMER_H

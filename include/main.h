@@ -13,6 +13,7 @@
 #include "gpio.h"
 #include "rcc.h"
 #include "timer.h"
+#include "adv_timer.h"
 #include "usart.h"
 #include "berryIMU.h"
 #include "fpu.h"
