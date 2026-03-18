@@ -29,14 +29,15 @@ void initPeripherals(void)
 
     initTimer2();
     initTimer5();
+    initTimer8();
 
     initPushButton();
 
     initUSART2();
     usartWriteString("Testing USART Connection!\n");
 
-    initSPI1();
-    initSPI2();
+    // initSPI1();
+    // initSPI2();
 
     // initBerryIMU();
 
@@ -76,20 +77,20 @@ int main(void)
     offLED(ORANGE_LED);
     offLED(BLUE_LED);
 
-    volatile uint8_t temp2 = 0;
-    temp2 = getWhoAmIxlgy(IMU1);
-    usartWriteString("IMU1 Acc & Gyro ID: ");
-    usartWriteNumber(temp2);
-    usartWriteString("Expected ID: ");
-    usartWriteNumber(0x6A);
-
     // volatile uint8_t temp2 = 0;
-    temp2 = 0;
-    temp2 = getWhoAmIxlgy(IMU2);
-    usartWriteString("IMU2 Acc & Gyro ID: ");
-    usartWriteNumber(temp2);
-    usartWriteString("Expected ID: ");
-    usartWriteNumber(0x6A);
+    // temp2 = getWhoAmIxlgy(IMU1);
+    // usartWriteString("IMU1 Acc & Gyro ID: ");
+    // usartWriteNumber(temp2);
+    // usartWriteString("Expected ID: ");
+    // usartWriteNumber(0x6A);
+
+    // // volatile uint8_t temp2 = 0;
+    // temp2 = 0;
+    // temp2 = getWhoAmIxlgy(IMU2);
+    // usartWriteString("IMU2 Acc & Gyro ID: ");
+    // usartWriteNumber(temp2);
+    // usartWriteString("Expected ID: ");
+    // usartWriteNumber(0x6A);
 
     while (1)
     {
@@ -116,12 +117,12 @@ int main(void)
 
         if (run)
         {
-            temp2 = getWhoAmIxlgy(IMU1);
-            usartWriteString("\nIMU1 Acc & Gyro ID: ");
-            usartWriteNumber(temp2);
-            temp2 = getWhoAmIxlgy(IMU2);
-            usartWriteString("IMU2 Acc & Gyro ID: ");
-            usartWriteNumber(temp2);
+            // temp2 = getWhoAmIxlgy(IMU1);
+            // usartWriteString("\nIMU1 Acc & Gyro ID: ");
+            // usartWriteNumber(temp2);
+            // temp2 = getWhoAmIxlgy(IMU2);
+            // usartWriteString("IMU2 Acc & Gyro ID: ");
+            // usartWriteNumber(temp2);
 
             // Log IMU 1: Accel to screen
             // logRawAccelData(IMU2, imu2_xl_data);
@@ -133,9 +134,23 @@ int main(void)
             // Log IMU 2: Gyro to screen
             // Log IMU 2: Mag to screen
 
+            // Set speed motor output
+            setDuty(CH1, 30);
+            setDuty(CH2, 30);
+            setDuty(CH3, 30);
+            setDuty(CH4, 30);
+
             // Toggle LED to show it's working
             toggleLED(GREEN_LED);
-            delayMillisecond(25);
+            delayMillisecond(50);
+        } else
+        {
+            // Set speed motor output
+            setDuty(CH1, 0);
+            setDuty(CH2, 0);
+            setDuty(CH4, 0);
+            setDuty(CH3, 0);
+            delayMillisecond(10);
         }
     }
 }

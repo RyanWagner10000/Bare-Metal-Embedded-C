@@ -12,7 +12,8 @@
 #include <stdint.h>
 #include "gpio.h"
 #include "rcc.h"
-#include "timer.h"
+#include "timer2_5.h"
+#include "timer8.h"
 #include "usart.h"
 #include "berryIMU.h"
 #include "fpu.h"
