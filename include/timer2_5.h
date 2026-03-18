@@ -1,13 +1,13 @@
 /*
- * file: timer.h
+ * file: timer2_5.h
  * description: header file for timer peripheral structure
  * author: Ryan Wagner
  * date: November 22, 2025
  * notes:
  */
 
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef TIMER2_5_H
+#define TIMER2_5_H
 
 #include <stdint.h>
 #include "rcc.h"
@@ -52,4 +52,4 @@ void initTimer2(void);
 void initTimer5(void);
 void delayMillisecond(uint32_t num_milliseconds);
 
-#endif // TIMER_H
+#endif // TIMER2_5_H

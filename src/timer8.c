@@ -6,7 +6,7 @@
  * notes:
  */
 
-#include "adv_timer.h"
+#include "timer8.h"
 
 /**
  * @brief Initialize Timer8 peripheral to control PWM for motor control

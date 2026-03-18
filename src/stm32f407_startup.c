@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include "gpio.h"
-#include "timer.h"
+#include "timer2_5.h"
 
 extern uint32_t _estack;
 extern uint32_t _etext;

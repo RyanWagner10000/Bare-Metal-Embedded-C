@@ -1,5 +1,5 @@
 /*
- * file: adv_timer.h
+ * file: timer8.h
  * description: header file for timer peripheral structure
  * author: Ryan Wagner
  * date: March 8, 2026

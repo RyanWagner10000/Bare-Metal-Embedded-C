@@ -13,7 +13,7 @@
 #include "spi1.h"
 #include "printing.h"
 #include "usart.h"
-#include "timer.h"
+#include "timer2_5.h"
 
 // General registers
 #define RESET_REGISTER (0x00)
