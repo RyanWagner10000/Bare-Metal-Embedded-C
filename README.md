@@ -17,7 +17,7 @@ Picture coming soon when it doesn't look like a rat's nest of wires :)
 
 This repo is mainly for practicing bare-metal embedded C programming on the STM32F407G-DISC1 board and following the book: Bare-Metal Embedded C Programming by Israel Gbati
 
-The goal is to make an autonomous drone, but if that doesn't happen it's okay. I'm just trying to learn as much as I can. Along that note, this repo does not use and CMSIS files or HAL libraries from STM. I figured that would degrade my learning experience and blow up the size of my code.
+The goal is to make a drone, but if that doesn't happen it's okay. I'm just trying to learn as much as I can. Along that note, this repo does not use any CMSIS files or HAL libraries from STM; I figured doing so would help me learn more about how everything works even it's not the most performant.
 
 <br>
 
@@ -30,11 +30,10 @@ The goal is to make an autonomous drone, but if that doesn't happen it's okay. I
 <br>
 
 ## Flashing the Board
-1. Edit the .c/.h files accordingly
-2. cd into the root folder of this project
-3. Run the build.sh bash script to build the whole project
-4. Run the flash.sh bash script to flash the compiled ELF file to the board. Make sure the board is plugged in to flash
-5. If you want to read the USART output from the device
+1. cd into the root folder of this project
+2. Run the build.sh bash script to build the whole project
+3. Run the flash.sh bash script to flash the compiled ELF file to the board. Make sure the board is plugged in to flash
+4. If you want to read the USART output from the device
    1. Make sure the USART-to-USB board is wired and plugged in
    2. Launch a serial USB port reading application in another terminal
 
@@ -87,7 +86,7 @@ Coming soon!
 
 ##### Description
 
-This ESC is a simple, entry-level motor controller, but has been over-spec-ed to account for any voltage spikes that could occur. These ESC's also come with two leads for and extra BEC line and a programming line. The BEC line supports up to 5V 5A and will hopefully be used to power some LED's on the arms of the quadcopter.
+This ESC is a simple, entry-level motor controller, but has been over spec-ed to account for any voltage spikes that could occur. These ESC's also come with two leads for and extra BEC line and a programming line. The BEC line supports up to 5V 5A and will hopefully be used to power some LED's on the arms of the quadcopter. The signal line is being controlled via a PWM pin on the MCU, with the duty cycle varying between ~1ms to ~2ms with an update rate of ~400 Hz. The duty cycle vaies between these values because the ESC is built to comply with Futaba's Standard of 1100 and 1940 microseconds. Futaba's Standard is pretty common for hobby level flying creations like drones, planes, and single-rotors, and is far simpler (but slower) than another form of communication like D-Shot. The pins used to provide PWM to the four ESC's were PC6, PC7, PC8, PC9.
 
 ---
 
@@ -96,7 +95,7 @@ This ESC is a simple, entry-level motor controller, but has been over-spec-ed to
 
 ##### Description
 
-This motor is a small, entry-level, torque focused motor. A 980 KV is more tuned to be a "heavy lifting" motor because it has a lower KV; a lower KV translates to a lower max RPM with the following equation of operating voltage * KV: 14.8 (V) * 980 (RPM/V) = 14,504 RPM. This drone build was not designed to be a racing drone, but something more stable just for show and experimentation. Two Cloackwise (CW) and Counterclockwise (CCW) motors were chosen for this build with a blades out configuration. It's possible to just buy all the same CW or CCW motor and swap the set of power leads to two of the motors (to spin in reverse), but I didn't want do that and just wanted to wire things normally. More physical and electrical motor specifications can be found at the link above.
+This motor is a small, entry-level, torque focused motor. A 980 KV is more tuned to be a "heavy lifting" motor because it has a lower KV; a lower KV translates to a lower max RPM with the following equation of operating voltage * KV: 14.8 (V) * 980 (RPM/V) = 14,504 RPM. This drone build was not designed to be a racing drone, but something more stable just for show and experimentation. Two Cloackwise (CW) and Counterclockwise (CCW) motors were chosen for this build with a blades out configuration. It's possible to just buy all the same CW or CCW motor and swap the set of power leads to two of the motors (to spin in reverse), but I didn't want do that and just wanted to wire things normally. The motos also make a continuous beeping noise when they aren't convifugred with a stable PWM source, but when one is provided they make a short tune to say they are configured correctly. More physical and electrical motor specifications can be found at the link above.
 
 ---
 
@@ -150,6 +149,10 @@ It also has an interrupt triggered on its overflow such that it sets a global fl
 
 This timer is used as general 1ms timer for waiting/sleeping purposes. Mainly used when initializing things.
 
+#### TIM8
+
+This timer is used for the PWM output for the ESC's/motors. It uses it's 4 channels on pins PC6, PC7, PC8, PC9 to change the PWM for each motor simultaneously. This timer updates at a rate of 400 Hz for faster throttle changes/response.
+
 ### LED's
 
 #### Green, Blue, Red, and Orange
@@ -165,13 +168,18 @@ All of these LED's are initialized and are typically used to show success/failur
 
 #### USART2
 
-This peripheral uses GPIO pins PD5 & PD6 in alternate function mode to enable basic USART communication to my development machine. I have configured the protocol to operate at 9600 baud, but may increase in the future depending on frequency of messaging; this peripheral will be toggled off in the final deployment of the code as a computer will not be connected to it at all times. Therefore, USART is mainly used for debugging.
+This peripheral uses GPIO pins PD5 & PD6 in alternate function mode to enable basic USART communication to my development machine. I have configured the protocol to operate at 115200 baud, but may change in the future depending on frequency of messaging; this peripheral will be toggled off in the final deployment of the code as a computer will not be connected to it at all times. Therefore, USART is mainly used for debugging.
 
 ### SPI
 
-#### SPI1
+#### SPI1 & SPI2
 
-This peripheral uses GPIO pins PB3, PB4, PB5, and PB7 to communicate via SPI to the IMU module. If other devices need to communicate via SPI1 (and at the same frequency), then they will share the SDO, SDI, and SCL pins as the IMU module, but will need another GPIO pin for the CS of the new device. SPI1 is setup to operate at 1MHz, reduced from the 16MHz bus frequency; this was done to limit extra noise on the sensor.
+These peripherals uses GPIO pins PB3, PB4, PB5, and PB7 for SPI1 and PB12, PB13, PB14, and PB15 for SPI2. These busses are used to communicate to both IMU modules. If other devices need to communicate via SPI1 (and at the same frequency), then they will share the SDO (MISO), SDI (MOSI), and SCL (SCK) pins as the IMU module, but will need another GPIO pin for the CS of the new device. SPI1 & SPI2 is setup to operate at 1MHz, reduced from the 16MHz bus frequency; this was done to limit extra noise on the sensor.
+
+
+#### SPI3
+
+This peripheral uses GPIO pins PC10, PC11, PC12, PD1, and PD2. This bus is used to communicate to the RF module (NRF24L01+); pins PD1 and PD2 are setup to be the CE and CSN pins which are used to turn the radio ON/OFF for use as well as for following the SPI communication protocol. SPI3 is setup to operate at 1MHz, reduced from the 16MHz bus frequency; this was done to limit extra noise on the sensor.
 
 ## Complimentary Filter
 
