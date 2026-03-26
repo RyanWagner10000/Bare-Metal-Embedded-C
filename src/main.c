@@ -38,6 +38,7 @@ void initPeripherals(void)
 
     // initSPI1();
     // initSPI2();
+    initSPI3();
 
     // initBerryIMU();
 
@@ -135,22 +136,23 @@ int main(void)
             // Log IMU 2: Mag to screen
 
             // Set speed motor output
-            setDuty(CH1, 30);
-            setDuty(CH2, 30);
-            setDuty(CH3, 30);
-            setDuty(CH4, 30);
+            // setDuty(CH1, 30);
+            // setDuty(CH2, 30);
+            // setDuty(CH3, 30);
+            // setDuty(CH4, 30);
 
             // Toggle LED to show it's working
             toggleLED(GREEN_LED);
             delayMillisecond(50);
-        } else
-        {
-            // Set speed motor output
-            setDuty(CH1, 0);
-            setDuty(CH2, 0);
-            setDuty(CH4, 0);
-            setDuty(CH3, 0);
-            delayMillisecond(10);
         }
+        // else
+        // {
+        //     // Set speed motor output
+        //     setDuty(CH1, 0);
+        //     setDuty(CH2, 0);
+        //     setDuty(CH3, 0);
+        //     setDuty(CH4, 0);
+        //     delayMillisecond(10);
+        // }
     }
 }

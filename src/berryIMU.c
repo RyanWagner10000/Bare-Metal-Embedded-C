@@ -116,16 +116,16 @@ void readBerryIMU(uint8_t imu_num, uint8_t address, uint8_t *data, uint32_t size
 void initAccelerometer(void)
 {
     // Accelerometer ODR 3.3 kHz = 0b10011011
-    // writeBerryIMU(IMU1, CTRL1_XL, 0x9B);
-    writeBerryIMU(IMU2, CTRL1_XL, 0x9B);
+    writeBerryIMU(IMU1, CTRL1_XL, 0x9B);
+    // writeBerryIMU(IMU2, CTRL1_XL, 0x9B);
 
     // Accelerometer Low & high pass filter, ODR/9 = 0b11001000
-    // writeBerryIMU(IMU1, CTRL8_XL, 0xC8);
-    writeBerryIMU(IMU2, CTRL8_XL, 0xC8);
+    writeBerryIMU(IMU1, CTRL8_XL, 0xC8);
+    // writeBerryIMU(IMU2, CTRL8_XL, 0xC8);
 
     // Accelerometer Block Data update, incrememnt during multi-byte read
-    // writeBerryIMU(IMU1, CTRL3_C, 0x44);
-    writeBerryIMU(IMU2, CTRL3_C, 0x44);
+    writeBerryIMU(IMU1, CTRL3_C, 0x44);
+    // writeBerryIMU(IMU2, CTRL3_C, 0x44);
 
     return;
 }
@@ -176,18 +176,11 @@ void initMagnetometer(void)
 uint8_t getWhoAmIxlgy(uint8_t imu_num)
 {
     // Read IMU ID for LSM6DSL
-    #define count 10
-    uint8_t id_num[count];
-    readBerryIMU(imu_num, WHO_AM_I, id_num, count);
-
-    for (int i = 0; i < count; i++)
-    {
-        usartWriteString("IMU Acc & Gyro ID: ");
-        usartWriteNumber(id_num[i]);
-    }
+    uint8_t id_num;
+    readBerryIMU(imu_num, WHO_AM_I, &id_num, 1);
 
     // Should be 0x6A
-    return id_num[0];
+    return id_num;
 }
 
 /**
@@ -235,7 +228,7 @@ void initBerryIMU(void)
 {
     // Alternate IMU1 and IMU2 commands to initialize everything
 
-    initAccelerometer();
+    // initAccelerometer();
 
     // initGyroscope();
 

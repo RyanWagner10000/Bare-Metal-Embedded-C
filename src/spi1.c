@@ -160,10 +160,10 @@ void receiveSPI1(uint8_t *data, uint32_t size)
 void enableCS_SPI1(void)
 {
     // Turn on SPI to device
-    GPIOB->ODR &= ~SPI1_CS;
+    GPIOB->ODR &= ~(SPI1_CS);
 
     // Small delay
-    for (volatile uint8_t i = 0; i < 10; i++)
+    for (volatile uint32_t i = 0; i < 1000; i++)
         ;
 
     return;
@@ -183,7 +183,7 @@ void disableCS_SPI1(void)
     GPIOB->ODR |= SPI1_CS;
 
     // Small delay
-    for (volatile uint8_t i = 0; i < 10; i++)
+    for (volatile uint32_t i = 0; i < 1000; i++)
         ;
 
     return;

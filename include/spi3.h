@@ -15,7 +15,8 @@
 
 #define SPI3_BASE 0x40003C00
 #define SPI3_EN (1U << 15)
-#define SPI3_CS (1U << 13)
+#define SPI3_CE (1U << 1)
+#define SPI3_CSN (1U << 2)
 
 #define SPI3 ((SPI3_TypeDef *)(SPI3_BASE))
 
