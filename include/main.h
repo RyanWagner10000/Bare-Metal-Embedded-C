@@ -17,5 +17,7 @@
 #include "usart.h"
 #include "berryIMU.h"
 #include "fpu.h"
+#include "timer6.h"
+#include "nrf24.h"
 
 #endif // MAIN_H

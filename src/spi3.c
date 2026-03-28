@@ -49,13 +49,28 @@ void initSPI3(void)
     GPIOC->AFRH &= ~(15U << 12); // Clear 0b0000
     GPIOC->AFRH &= ~(15U << 16); // Clear 0b0000
     // Then set
-    GPIOC->AFRH |= (5U << 8);  // AFRL10 -> 0b0101 = AF5
-    GPIOC->AFRH |= (5U << 12); // AFRL11 -> 0b0101 = AF5
-    GPIOC->AFRH |= (5U << 16); // AFRL12 -> 0b0101 = AF5
+    GPIOC->AFRH |= (6U << 8);  // AFRL10 -> 0b0101 = AF5
+    GPIOC->AFRH |= (6U << 12); // AFRL11 -> 0b0101 = AF5
+    GPIOC->AFRH |= (6U << 16); // AFRL12 -> 0b0101 = AF5
 
     // Initialize CS Pin to high
     GPIOD->ODR |= SPI3_CSN;
-    GPIOD->ODR &= ~(SPI3_CE);
+    GPIOD->ODR |= (SPI3_CE);
+
+    // Set output type to push-pull
+    GPIOC->OTYPER &= ~(1U << 10);
+    GPIOC->OTYPER &= ~(1U << 11);
+    GPIOC->OTYPER &= ~(1U << 12);
+
+    // Set high speed for SPI pins
+    GPIOC->OSPEEDR |= (3U << 10);
+    GPIOC->OSPEEDR |= (3U << 12);
+    GPIOC->OSPEEDR |= (3U << 14);
+
+    // No pull-up / pull-down
+    GPIOC->PUPDR &= ~(3U << 10);
+    GPIOC->PUPDR &= ~(3U << 12);
+    GPIOC->PUPDR &= ~(3U << 14);
 
     // Clear config to init
     SPI3->CR1 = 0x0000;
@@ -64,7 +79,11 @@ void initSPI3(void)
     SPI3->CR1 |= (3U << 3); // Set BR = 011 = /16
 
     // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
+    // SPI3->CR1 |= (3U << 0);
     SPI3->CR1 &= ~(3U << 0);
+
+    // Enable FULL duplex
+    // SPI1->CR1 &= ~(1U << 10);
 
     // Set MSB first
     SPI3->CR1 &= ~(1U << 7);
@@ -101,6 +120,8 @@ void transmitSPI3(uint8_t *address, uint32_t size)
             ;
 
         // Write data to register
+        usartWriteString("Writing to DR: ");
+        usartWriteNumber((uint32_t)address[i]);
         SPI3->DR = address[i];
         i++;
     }
@@ -115,7 +136,8 @@ void transmitSPI3(uint8_t *address, uint32_t size)
 
     // Clear OVR flag
     // Drain the RX buffer of the junk byte clocked in during TX
-    while (SPI3->SR & (1U << 0)) {
+    while (SPI3->SR & (1U << 0))
+    {
         (void)SPI3->DR;
     }
     (void)SPI3->SR; // Clear OVR
@@ -126,12 +148,12 @@ void transmitSPI3(uint8_t *address, uint32_t size)
 /**
  * @brief Receives messages on the SPI3 peripheral
  *
- * @param address Array of addresses to recieve
+ * @param data Array for recieve data
  * @param size Size of array messages to recieve
  *
  * @return None
  */
-void receiveSPI3(uint8_t *address, uint32_t size)
+void receiveSPI3(uint8_t *data, uint32_t size)
 {
     while (size)
     {
@@ -140,16 +162,21 @@ void receiveSPI3(uint8_t *address, uint32_t size)
             ;
 
         // Send dummy data
-        SPI3->DR = 0;
+        SPI3->DR = 0xFF;
 
         // Wait for RXNE FLAG to be set
         while (!(SPI3->SR & (1U << 0)))
             ;
 
         // Read data from register
-        *address++ = (SPI3->DR);
+        *data++ = (uint8_t)(SPI3->DR);
         size--;
     }
+
+    // Wait for BUSY flag to reset
+    while ((SPI3->SR & (1U << 7)))
+        ;
+
     return;
 }
 
@@ -160,12 +187,13 @@ void receiveSPI3(uint8_t *address, uint32_t size)
  *
  * @return None
  */
-void enableCS_SPI3(void)
+void enableCSN_SPI3(void)
 {
     // Turn on SPI to device
-    GPIOC->ODR &= ~(SPI3_CE);
+    GPIOD->ODR &= ~(SPI3_CSN);
+
     // Small delay
-    for (volatile uint8_t i = 0; i < 100; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;
@@ -178,22 +206,20 @@ void enableCS_SPI3(void)
  *
  * @return None
  */
-void disableCS_SPI3(void)
+void disableCSN_SPI3(void)
 {
-    // Small delay
-    for (volatile uint8_t i; i < 100; i++)
-        ;
     // Turn off SPI to device
-    GPIOC->ODR |= SPI3_CE;
+    GPIOD->ODR |= SPI3_CSN;
+
     // Small delay
-    for (volatile uint8_t i = 0; i < 100; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;
 }
 
 /**
- * @brief Enable the Chip Select pin on GPIO PD1 to enable Tx/Rx Mode
+ * @brief Enable the Chip Enable pin on GPIO PD1 to enable Tx/Rx Mode
  *
  * @param None
  *
@@ -202,16 +228,17 @@ void disableCS_SPI3(void)
 void enableCE_SPI3(void)
 {
     // Turn on SPI to device
-    GPIOC->ODR |= SPI3_CE;
+    GPIOD->ODR |= SPI3_CE;
+
     // Small delay
-    for (volatile uint8_t i = 0; i < 100; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;
 }
 
 /**
- * @brief Disable the Chip Select pin on GPIO PD1 to disable Tx/Rx Mode
+ * @brief Disable the Chip Enable pin on GPIO PD1 to disable Tx/Rx Mode
  *
  * @param None
  *
@@ -219,13 +246,11 @@ void enableCE_SPI3(void)
  */
 void disableCE_SPI3(void)
 {
-    // Small delay
-    for (volatile uint8_t i; i < 100; i++)
-        ;
     // Turn off SPI to device
-    GPIOC->ODR &= ~(SPI3_CE);
+    GPIOD->ODR &= ~(SPI3_CE);
+
     // Small delay
-    for (volatile uint8_t i = 0; i < 100; i++)
+    for (volatile uint8_t i = 0; i < 10; i++)
         ;
 
     return;

@@ -19,6 +19,7 @@
  */
 void initSPI1(void)
 {
+
     // Enable clock to GPIOB
     RCC->AHB1ENR |= GPIOBEN;
 
@@ -51,6 +52,21 @@ void initSPI1(void)
     // Initialize CS Pin to high
     GPIOB->ODR |= SPI1_CS;
 
+    // Set output type to push-pull
+    GPIOB->OTYPER &= ~(1U << 3);
+    GPIOB->OTYPER &= ~(1U << 4);
+    GPIOB->OTYPER &= ~(1U << 5);
+
+    // Set high speed for SPI pins
+    GPIOB->OSPEEDR |= (3U << 6);
+    GPIOB->OSPEEDR |= (3U << 8);
+    GPIOB->OSPEEDR |= (3U << 10);
+
+    // No pull-up / pull-down
+    GPIOB->PUPDR &= ~(3U << 6);
+    GPIOB->PUPDR &= ~(3U << 8);
+    GPIOB->PUPDR &= ~(3U << 10);
+
     // Clear config to init
     SPI1->CR1 = 0x0000;
 
@@ -58,7 +74,8 @@ void initSPI1(void)
     SPI1->CR1 |= (3U << 3); // Set BR = 011 = /16
 
     // Set CPHA and CPOL to 1 (Mode 3) to determine behavior
-    SPI1->CR1 |= (3U << 0);
+    // SPI1->CR1 |= (3U << 0);
+    SPI1->CR1 &= ~(3U << 0);
 
     // Enable FULL duplex
     // SPI1->CR1 &= ~(1U << 10);
@@ -112,7 +129,8 @@ void transmitSPI1(uint8_t *address, uint32_t size)
 
     // Clear OVR flag
     // Drain the RX buffer of the junk byte clocked in during TX
-    while (SPI1->SR & (1U << 0)) {
+    while (SPI1->SR & (1U << 0))
+    {
         (void)SPI1->DR;
     }
     (void)SPI1->SR; // Clear OVR
@@ -137,7 +155,7 @@ void receiveSPI1(uint8_t *data, uint32_t size)
             ;
 
         // Send dummy data
-        SPI1->DR = 0;
+        SPI1->DR = 0x00;
 
         // Wait for RXNE FLAG to be set
         while (!(SPI1->SR & (1U << 0)))
@@ -147,6 +165,11 @@ void receiveSPI1(uint8_t *data, uint32_t size)
         *data++ = (uint8_t)(SPI1->DR);
         size--;
     }
+
+    // Wait for BUSY flag to reset
+    while ((SPI1->SR & (1U << 7)))
+        ;
+
     return;
 }
 
@@ -163,7 +186,7 @@ void enableCS_SPI1(void)
     GPIOB->ODR &= ~(SPI1_CS);
 
     // Small delay
-    for (volatile uint32_t i = 0; i < 1000; i++)
+    for (volatile uint32_t i = 0; i < 10; i++)
         ;
 
     return;
@@ -183,7 +206,7 @@ void disableCS_SPI1(void)
     GPIOB->ODR |= SPI1_CS;
 
     // Small delay
-    for (volatile uint32_t i = 0; i < 1000; i++)
+    for (volatile uint32_t i = 0; i < 10; i++)
         ;
 
     return;

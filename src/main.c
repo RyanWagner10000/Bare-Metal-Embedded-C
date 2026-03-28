@@ -19,28 +19,47 @@
  */
 void initPeripherals(void)
 {
+    // Enable Floating Point Unit
     enableFaults();
     enableFPU();
 
+    // Enable all the LED's
     initGreenLED();
     initOrangeLED();
     initRedLED();
     initBlueLED();
 
+    // Enable all the timers
     initTimer2();
     initTimer5();
+    initTimer6();
     initTimer8();
 
+    // Enable the push button on the board
     initPushButton();
 
+    // Enable USART for testing
     initUSART2();
     usartWriteString("Testing USART Connection!\n");
 
-    // initSPI1();
+    // Enable SPI buses for IMU and Radio
+    initSPI1();
+    usartWriteString("SPI1 successfully initialized!\n");
     // initSPI2();
+    // usartWriteString("SPI2 successfully initialized!\n");
     initSPI3();
+    usartWriteString("SPI3 successfully initialized!\n");
 
-    // initBerryIMU();
+    // Enable IMU
+    initBerryIMU();
+    usartWriteString("IMU successfully initialized!\n");
+
+    // Enable Radio
+    initRadio();
+    usartWriteString("Radio successfully initialized!\n");
+    // setRxMode(0);
+    // usartWriteString("Rx Mode set successfully!\n");
+    printRadioSettings();
 
     // Show success
     for (uint8_t i = 0; i < 2; i++)
@@ -78,14 +97,14 @@ int main(void)
     offLED(ORANGE_LED);
     offLED(BLUE_LED);
 
-    // volatile uint8_t temp2 = 0;
-    // temp2 = getWhoAmIxlgy(IMU1);
-    // usartWriteString("IMU1 Acc & Gyro ID: ");
-    // usartWriteNumber(temp2);
-    // usartWriteString("Expected ID: ");
-    // usartWriteNumber(0x6A);
+    volatile uint8_t temp2 = 0;
+    temp2 = getWhoAmIxlgy(IMU1);
+    usartWriteString("IMU1 Acc & Gyro ID: ");
+    usartWriteNumber(temp2);
+    usartWriteString("Expected ID: ");
+    usartWriteNumber(0x6A);
 
-    // // volatile uint8_t temp2 = 0;
+    // volatile uint8_t temp2 = 0;
     // temp2 = 0;
     // temp2 = getWhoAmIxlgy(IMU2);
     // usartWriteString("IMU2 Acc & Gyro ID: ");
@@ -118,9 +137,9 @@ int main(void)
 
         if (run)
         {
-            // temp2 = getWhoAmIxlgy(IMU1);
-            // usartWriteString("\nIMU1 Acc & Gyro ID: ");
-            // usartWriteNumber(temp2);
+            temp2 = getWhoAmIxlgy(IMU1);
+            usartWriteString("\nIMU1 Acc & Gyro ID: ");
+            usartWriteNumber(temp2);
             // temp2 = getWhoAmIxlgy(IMU2);
             // usartWriteString("IMU2 Acc & Gyro ID: ");
             // usartWriteNumber(temp2);

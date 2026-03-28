@@ -30,8 +30,8 @@ void writeBerryIMU(uint8_t imu_num, uint8_t address, uint8_t data)
     // Place data into buffer
     msg[1] = data;
 
-    address++;
-    data++;
+    // address++;
+    // data++;
 
     if (imu_num == IMU1)
     {

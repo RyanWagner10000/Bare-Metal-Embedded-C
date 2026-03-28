@@ -1,0 +1,91 @@
+/*
+ * file: nrf24.h
+ * description: header file for NRF24L01
+ * author: Ryan Wagner
+ * date: March 27, 2026
+ * notes:
+ */
+
+#ifndef NRF24_H
+#define NRF24_H
+
+#include <stdint.h>
+#include "spi3.h"
+#include "printing.h"
+#include "timer6.h"
+
+// Commands
+// #define R_REGISTER 0x00
+#define W_REGISTER 0x20
+#define R_RX_PAYLOAD 0x61
+#define W_TX_PAYLOAD 0xA0
+#define FLUSH_TX 0xE1
+#define FLUSH_RX 0xE2
+#define REUSE_TX_PL 0xE3
+#define R_RX_PL_WID 0x60
+#define W_ACK_PAYLOAD 0xA8
+#define W_TX_PAYLOAD_NO_ACK 0xB0
+#define NOP 0xFF
+
+// Registers
+#define CONFIG 0x00
+#define EN_AA 0x01
+#define EN_RXADDR 0x02
+#define SETUP_AW 0x03
+#define SETUP_RETR 0x04
+#define RF_CH 0x05
+#define RF_SETUP 0x06
+#define STATUS 0x07
+#define OBSERVE_TX 0x08
+#define CD 0x09
+#define RX_ADDR_P0 0x0A
+#define RX_ADDR_P1 0x0B
+#define RX_ADDR_P2 0x0C
+#define RX_ADDR_P3 0x0D
+#define RX_ADDR_P4 0x0E
+#define RX_ADDR_P5 0x0F
+#define TX_ADDR 0x10
+#define RX_PW_P0 0x11
+#define RX_PW_P1 0x12
+#define RX_PW_P2 0x13
+#define RX_PW_P3 0x14
+#define RX_PW_P4 0x15
+#define RX_PW_P5 0x16
+#define FIFO_STATUS 0x17
+#define DYNPD 0x1C
+#define FEATURE 0x1D
+
+// Constants for setting radio registers
+// Can be 3, 4, or 5 but needs to be consistant with the init function
+#define ADDRESS_WIDTH 5
+#define MAX_BUFFER_SIZE 33
+
+struct NRF24_STATUS_DATA
+{
+    int RX_DR, TX_DS, MAX_RT, TX_FULL, TX_EMPTY, RX_EMPTY, RX_FULL, TX_REUSE, TX_FULL_F, RX_P_NO, ARC_CNT, PLOS_CNT, STATUS_BYTE, FIFO_STATUS_BYTE;
+};
+
+enum PIPE_PACKET_SIZE
+{
+    P0_PACKET_SIZE = 4,
+    P1_PACKET_SIZE = 32,
+    P2_PACKET_SIZE = 32,
+    P3_PACKET_SIZE = 32,
+    P4_PACKET_SIZE = 32,
+    P5_PACKET_SIZE = 32
+};
+
+void initRadio(void);
+void printRadioSettings(void);
+struct NRF24_STATUS_DATA statusRadio(void);
+void setTxMode(uint8_t channel);
+void setRxMode(uint8_t channel);
+void transmitRadio(uint8_t *data, uint8_t length);
+uint8_t dataAvailable(void);
+uint8_t txFIFOFull(void);
+void readRadio(uint8_t *data, enum PIPE_PACKET_SIZE pps);
+void flushRx(void);
+void flushTx(void);
+uint8_t readRegister(uint8_t address);
+
+#endif // NRF24_H
