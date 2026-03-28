@@ -110,7 +110,7 @@ void usartWriteChar(uint8_t character)
 /**
  * @brief Write an integer to the USART2 peripheral
  *
- * @param value Unsigned 8-bit integer to "print" to the terminal
+ * @param value Unsigned 32-bit integer to "print" to the terminal
  *
  * @return None
  */

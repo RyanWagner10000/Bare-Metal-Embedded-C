@@ -26,7 +26,7 @@ void initSPI3(void)
     // Enable clock to SPI3
     RCC->APB1ENR |= SPI3_EN;
 
-    // Set pin mode for PB10, PB11, PB12 to alternate function
+    // Set pin mode for PC10, PC11, PC12 to alternate function
     // Set pin mode for PD1 to output CE
     // Set pin mode for PD2 to output CSN
     // Clear first
@@ -43,19 +43,18 @@ void initSPI3(void)
     GPIOD->MODER |= (1U << 2);  // Output mode 0b01
     GPIOD->MODER |= (1U << 4);  // Output mode 0b01
 
-    // Set alternate function mode for PB10, PB11, PB12
+    // Set alternate function mode for PC10, PC11, PC12
     // Clear first
     GPIOC->AFRH &= ~(15U << 8);  // Clear 0b0000
     GPIOC->AFRH &= ~(15U << 12); // Clear 0b0000
     GPIOC->AFRH &= ~(15U << 16); // Clear 0b0000
     // Then set
-    GPIOC->AFRH |= (6U << 8);  // AFRL10 -> 0b0101 = AF5
-    GPIOC->AFRH |= (6U << 12); // AFRL11 -> 0b0101 = AF5
-    GPIOC->AFRH |= (6U << 16); // AFRL12 -> 0b0101 = AF5
+    GPIOC->AFRH |= (6U << 8);  // AFRH10 -> 0b0110 = AF6
+    GPIOC->AFRH |= (6U << 12); // AFRH11 -> 0b0110 = AF6
+    GPIOC->AFRH |= (6U << 16); // AFRH12 -> 0b0110 = AF6
 
     // Initialize CS Pin to high
     GPIOD->ODR |= SPI3_CSN;
-    GPIOD->ODR |= (SPI3_CE);
 
     // Set output type to push-pull
     GPIOC->OTYPER &= ~(1U << 10);
@@ -63,14 +62,14 @@ void initSPI3(void)
     GPIOC->OTYPER &= ~(1U << 12);
 
     // Set high speed for SPI pins
-    GPIOC->OSPEEDR |= (3U << 10);
-    GPIOC->OSPEEDR |= (3U << 12);
-    GPIOC->OSPEEDR |= (3U << 14);
+    GPIOC->OSPEEDR |= (3U << 20);
+    GPIOC->OSPEEDR |= (3U << 22);
+    GPIOC->OSPEEDR |= (3U << 24);
 
     // No pull-up / pull-down
-    GPIOC->PUPDR &= ~(3U << 10);
-    GPIOC->PUPDR &= ~(3U << 12);
-    GPIOC->PUPDR &= ~(3U << 14);
+    GPIOC->PUPDR &= ~(3U << 20);
+    GPIOC->PUPDR &= ~(3U << 22);
+    GPIOC->PUPDR &= ~(3U << 24);
 
     // Clear config to init
     SPI3->CR1 = 0x0000;
@@ -155,6 +154,7 @@ void transmitSPI3(uint8_t *address, uint32_t size)
  */
 void receiveSPI3(uint8_t *data, uint32_t size)
 {
+    uint8_t i = 0;
     while (size)
     {
         // Wait until transmit buffer is empty
@@ -169,13 +169,55 @@ void receiveSPI3(uint8_t *data, uint32_t size)
             ;
 
         // Read data from register
-        *data++ = (uint8_t)(SPI3->DR);
+        uint32_t temp = (SPI3->DR);
+        usartWriteString("Read value: ");
+        usartWriteNumber(temp);
+        data[i] = (uint8_t)temp;
+        ++i;
+        // *data++ = (uint8_t)(SPI3->DR);
         size--;
     }
 
     // Wait for BUSY flag to reset
     while ((SPI3->SR & (1U << 7)))
         ;
+
+    return;
+}
+
+void transferSPI3(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
+{
+    uint8_t i = 0;
+    while (i < length)
+    {
+        // Wait until TXE is set
+        while (!(SPI3->SR & TXE))
+            ;
+        
+        // Write data to register
+        SPI3->DR = tx_buffer[i];
+
+        // Wait for RXNE to be set
+        while (!(SPI3->SR & RXNE))
+            ;
+        
+        // Read data from register
+        rx_buffer[i] = (SPI3->DR) & 0xFF;
+
+        ++i;
+    }
+
+    // Wait for BUSY flag to reset
+    while ((SPI3->SR & BUSY))
+        ;
+    
+    // Drain the RX buffer of the junk byte clocked in during TX
+    while (SPI3->SR & (1U << 0))
+    {
+        (void)SPI3->DR;
+    }
+    // Clear OVR flag
+    (void)SPI3->SR; // Clear OVR
 
     return;
 }

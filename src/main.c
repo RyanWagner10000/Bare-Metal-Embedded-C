@@ -9,13 +9,39 @@
 #include "main.h"
 
 /**
+ * @brief Flash all LEDs
+ * 
+ * @param delay Delay in milliseconds between flashes
+ *
+ * @return None
+ */
+void flashAllLED(uint32_t delay)
+{
+    onLED(RED_LED);
+    onLED(ORANGE_LED);
+    onLED(BLUE_LED);
+    onLED(GREEN_LED);
+
+    delayMillisecond(delay);
+
+    offLED(RED_LED);
+    offLED(ORANGE_LED);
+    offLED(BLUE_LED);
+    offLED(GREEN_LED);
+
+    delayMillisecond(delay);
+
+    return;
+}
+
+/**
  * @brief Initiate all peripherals for the system
  *
  * @param None
  *
  * @return None
  *
- * @note Flashes the green LED 5 times upon success
+ * @note Flashes all LED's 1 time upon success
  */
 void initPeripherals(void)
 {
@@ -50,29 +76,57 @@ void initPeripherals(void)
     initSPI3();
     usartWriteString("SPI3 successfully initialized!\n");
 
-    // Enable IMU
-    initBerryIMU();
-    usartWriteString("IMU successfully initialized!\n");
-
-    // Enable Radio
-    initRadio();
-    usartWriteString("Radio successfully initialized!\n");
-    // setRxMode(0);
-    // usartWriteString("Rx Mode set successfully!\n");
-    printRadioSettings();
-
     // Show success
-    for (uint8_t i = 0; i < 2; i++)
-    {
-        onLED(GREEN_LED);
-        for (uint32_t j = 0; j < 100000; j++)
-            ;
-        offLED(GREEN_LED);
-        for (uint32_t j = 0; j < 100000; j++)
-            ;
-    }
+    flashAllLED(FLASH_SUCCESS);
 
     return;
+}
+
+/**
+ * @brief Initiate all peripherals for the system
+ *
+ * @param None
+ *
+ * @return None
+ *
+ * @note Flashes all LED's 1 time upon success, flashes faster continuously if failed
+ */
+void initModules(void)
+{
+    // Enable IMU
+    initBerryIMU();
+    usartWriteString("\nIMU successfully initialized!\n");
+
+    // Enable Radio
+    if (initRadio())
+    {
+        usartWriteString("\nRadio successfully initialized!\n");
+
+        // Now set for Rx mode
+        if (setRxMode(RX_P0_CHANNEL))
+            usartWriteString("Rx Mode set successfully!\n");
+        else
+        {
+            usartWriteString("Rx Mode NOT set successfully.\n");
+            printRadioSettings();
+            while (1)
+            {
+                flashAllLED(FLASH_FAIL);
+            }
+        }
+    }
+    else
+    {
+        usartWriteString("Radio initialization unsuccessful.\n");
+        printRadioSettings();
+        while (1)
+        {
+            flashAllLED(FLASH_FAIL);
+        }
+    }
+
+    // Show success
+    flashAllLED(FLASH_SUCCESS);
 }
 
 /**
@@ -85,6 +139,7 @@ void initPeripherals(void)
 int main(void)
 {
     initPeripherals();
+    initModules();
 
     // Get and set inital state
     uint32_t button_state = getButtonState();

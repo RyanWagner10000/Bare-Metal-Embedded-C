@@ -20,4 +20,8 @@
 #include "timer6.h"
 #include "nrf24.h"
 
+#define RX_P0_CHANNEL 0
+#define FLASH_FAIL 100
+#define FLASH_SUCCESS 250
+
 #endif // MAIN_H

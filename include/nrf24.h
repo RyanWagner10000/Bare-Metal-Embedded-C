@@ -75,17 +75,16 @@ enum PIPE_PACKET_SIZE
     P5_PACKET_SIZE = 32
 };
 
-void initRadio(void);
+uint8_t initRadio(void);
 void printRadioSettings(void);
 struct NRF24_STATUS_DATA statusRadio(void);
-void setTxMode(uint8_t channel);
-void setRxMode(uint8_t channel);
+uint8_t setTxMode(uint8_t channel);
+uint8_t setRxMode(uint8_t channel);
 void transmitRadio(uint8_t *data, uint8_t length);
 uint8_t dataAvailable(void);
 uint8_t txFIFOFull(void);
 void readRadio(uint8_t *data, enum PIPE_PACKET_SIZE pps);
 void flushRx(void);
 void flushTx(void);
-uint8_t readRegister(uint8_t address);
 
 #endif // NRF24_H
