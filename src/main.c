@@ -10,7 +10,7 @@
 
 /**
  * @brief Flash all LEDs
- * 
+ *
  * @param delay Delay in milliseconds between flashes
  *
  * @return None
@@ -98,17 +98,16 @@ void initModules(void)
     usartWriteString("\nIMU successfully initialized!\n");
 
     // Enable Radio
-    if (initRadio())
+    if (initRadio(RX_P0_CHANNEL))
     {
         usartWriteString("\nRadio successfully initialized!\n");
 
         // Now set for Rx mode
-        if (setRxMode(RX_P0_CHANNEL))
+        if (setRxMode())
             usartWriteString("Rx Mode set successfully!\n");
         else
         {
             usartWriteString("Rx Mode NOT set successfully.\n");
-            printRadioSettings();
             while (1)
             {
                 flashAllLED(FLASH_FAIL);
@@ -118,15 +117,26 @@ void initModules(void)
     else
     {
         usartWriteString("Radio initialization unsuccessful.\n");
-        printRadioSettings();
         while (1)
         {
             flashAllLED(FLASH_FAIL);
         }
     }
 
+    printRadioSettings();
+
     // Show success
     flashAllLED(FLASH_SUCCESS);
+}
+
+
+void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
+{
+    // Set the duty cycles for the motors based on recent packet info
+    duty_cycles->duty1 = 0;
+    duty_cycles->duty2 = 0;
+    duty_cycles->duty3 = 0;
+    duty_cycles->duty4 = 0;
 }
 
 /**
@@ -142,91 +152,118 @@ int main(void)
     initModules();
 
     // Get and set inital state
-    uint32_t button_state = getButtonState();
-    uint8_t run = 0;
-    // int16_t imu1_xl_data[3];
-    // int16_t imu2_xl_data[3];
+    // uint32_t button_state = getButtonState();
 
     offLED(GREEN_LED);
     offLED(RED_LED);
     offLED(ORANGE_LED);
     offLED(BLUE_LED);
 
-    volatile uint8_t temp2 = 0;
-    temp2 = getWhoAmIxlgy(IMU1);
-    usartWriteString("IMU1 Acc & Gyro ID: ");
-    usartWriteNumber(temp2);
-    usartWriteString("Expected ID: ");
-    usartWriteNumber(0x6A);
+    // Struct to hold TxRx data from ground-station
+    RadioPacket packet;
+    DutyCycles duty_cycles = {0, 0, 0, 0};
+    uint8_t txrx = 1; // 0 for tx, 1 for rx
 
-    // volatile uint8_t temp2 = 0;
-    // temp2 = 0;
-    // temp2 = getWhoAmIxlgy(IMU2);
-    // usartWriteString("IMU2 Acc & Gyro ID: ");
-    // usartWriteNumber(temp2);
-    // usartWriteString("Expected ID: ");
-    // usartWriteNumber(0x6A);
+    // State initializations
+    // enum IMU_STATE imu_state = IDLE;
+    enum RADIO_STATE radio_state = RECEIVE;
+    // enum FILTER_STATE filter_state = IDLE;
+    // enum MOTOR_STATE motor_state = OFF;
+
+    uint8_t temp = getWhoAmIxlgy(IMU1);
+    usartWriteString("IMU1 Acc & Gyro ID: ");
+    usartWriteNumber((int32_t)temp);
 
     while (1)
     {
-        // Check if the button has been set ON/OFF
-        button_state = getButtonState();
-        if (button_state)
+        switch (radio_state)
         {
-            run++;
-            run = run & 0x01;
-            offLED(GREEN_LED);
-            delayMillisecond(150);
+        case RECEIVE:
+        {
+            // Check for any incoming packets from ground station
+            if (dataAvailable())
+            {
+                // Check if Rx Mode already set
+                if (!txrx)
+                {
+                    // Set Rx Mode
+                    if (!setRxMode())
+                        break;
+                    txrx = 1;
+                }
+
+                // Read Rx data, print if available
+                readRadio(&packet, P0_PACKET_SIZE);
+
+                // Print packet for confirmation
+                // printPacket(packet);
+                calculateMotorDuty(packet, &duty_cycles);
+            }
+            break;
+        }
+        case TRANSMIT:
+        {
+            // Check if Tx Mode already set
+            if (txrx)
+            {
+                // Set Tx Mode
+                if (!setTxMode())
+                    continue;
+                txrx = 0;
+            }
+
+            // Check that the Tx FIFO isn't full
+            if (txFIFOFull())
+                continue;
+
+            // Transmit data
+            uint8_t *data = (uint8_t *)&packet;
+            transmitRadio(data, P0_PACKET_SIZE);
+
+            // Set back to Rx mode
+            radio_state = RECEIVE;
+            break;
+        }
+        default:
+        {
+            radio_state = RECEIVE;
+            break;
+        }
         }
 
-        // Flag to indicate update of the IMU complimetary filter
-        if (getImuFlag())
-        {
-            // Reset check flag
-            setImuFlag(0);
-
-            // Complimentary filter
-            // logRawAccelData(IMU1, imu1_xl_data);
-            // logRawAccelData(IMU2, imu2_xl_data);
-        }
-
-        if (run)
-        {
-            temp2 = getWhoAmIxlgy(IMU1);
-            usartWriteString("\nIMU1 Acc & Gyro ID: ");
-            usartWriteNumber(temp2);
-            // temp2 = getWhoAmIxlgy(IMU2);
-            // usartWriteString("IMU2 Acc & Gyro ID: ");
-            // usartWriteNumber(temp2);
-
-            // Log IMU 1: Accel to screen
-            // logRawAccelData(IMU2, imu2_xl_data);
-
-            // Log IMU 1: Gyro to screen
-            // Log IMU 1: Mag to screen
-
-            // Log IMU 2: Accel to screen
-            // Log IMU 2: Gyro to screen
-            // Log IMU 2: Mag to screen
-
-            // Set speed motor output
-            // setDuty(CH1, 30);
-            // setDuty(CH2, 30);
-            // setDuty(CH3, 30);
-            // setDuty(CH4, 30);
-
-            // Toggle LED to show it's working
-            toggleLED(GREEN_LED);
-            delayMillisecond(50);
-        }
-        // else
+        // switch (motor_state)
+        // {
+        // case OFF:
         // {
         //     // Set speed motor output
         //     setDuty(CH1, 0);
         //     setDuty(CH2, 0);
         //     setDuty(CH3, 0);
         //     setDuty(CH4, 0);
-        //     delayMillisecond(10);
+        //     break;
+        // }
+        // case IDLE:
+        // {
+        //     // Set speed motor output
+        //     setDuty(CH1, 20);
+        //     setDuty(CH2, 20);
+        //     setDuty(CH3, 20);
+        //     setDuty(CH4, 20);
+        //     break;
+        // }
+        // case OPERATING:
+        // {
+        //     // Set speed motor output
+        //     // setDuty(CH1, 0);
+        //     // setDuty(CH2, 0);
+        //     // setDuty(CH3, 0);
+        //     // setDuty(CH4, 0);
+        //     break;
+        // }
+        // default:
+        // {
+        //     break;
+        // }
         // }
     }
 }

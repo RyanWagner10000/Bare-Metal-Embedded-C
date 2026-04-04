@@ -120,7 +120,7 @@ void transmitSPI3(uint8_t *address, uint32_t size)
 
         // Write data to register
         usartWriteString("Writing to DR: ");
-        usartWriteNumber((uint32_t)address[i]);
+        usartWriteNumber((int32_t)address[i]);
         SPI3->DR = address[i];
         i++;
     }
@@ -171,7 +171,7 @@ void receiveSPI3(uint8_t *data, uint32_t size)
         // Read data from register
         uint32_t temp = (SPI3->DR);
         usartWriteString("Read value: ");
-        usartWriteNumber(temp);
+        usartWriteNumber((int32_t)temp);
         data[i] = (uint8_t)temp;
         ++i;
         // *data++ = (uint8_t)(SPI3->DR);

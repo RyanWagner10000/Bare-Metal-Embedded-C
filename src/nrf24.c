@@ -144,22 +144,23 @@ void readRegisterMulti(uint8_t address, uint8_t *values, uint8_t length)
 /**
  * @brief Initalize the registers on the radio module
  *
- * @param None
+ * @param channel RF Channel frequency offset
  *
  * @return 0 on failure, 1 on success
  */
-uint8_t initRadio(void)
+uint8_t initRadio(uint8_t channel)
 {
     uint8_t success = 1;
     uint8_t check_value = 0xFF;
 
     // Settings
     uint8_t config = 0x00;
-    uint8_t en_aa = 0x3F;
+    // uint8_t en_aa = 0x3F;
+    uint8_t en_aa = 0x00;
     uint8_t en_rxaddr = 0x03;
     uint8_t setup_aw = 0x03;
     uint8_t setup_retr = 0x00;
-    uint8_t rf_ch = 0x00;
+    uint8_t rf_ch = channel;
     uint8_t rf_setup = 0x0F;
 
     // Disable radio TxRx
@@ -221,6 +222,14 @@ uint8_t initRadio(void)
         success = 0;
     check_value = 0xFF;
 
+    // Set Payload size for Pipe 0
+    writeRegisterSingle(RX_PW_P0, P0_PACKET_SIZE);
+    // Check value
+    check_value = readRegisterSingle(RX_PW_P0);
+    if (check_value != P0_PACKET_SIZE)
+        success = 0;
+    check_value = 0xFF;
+
     // Set Rx Address Pipe 0 register
     writeRegisterMulti(RX_ADDR_P0, RX_ADDR_P0_BUFFER, ADDRESS_WIDTH);
 
@@ -235,6 +244,23 @@ uint8_t initRadio(void)
             usartWriteString("Reading the same data from RX_ADDR_P0 was unsuccessful.\n");
             break;
         }
+        // Reset for next use
+        read_buffer[i] = 0;
+    }
+
+    // Set Tx Address
+    writeRegisterMulti(TX_ADDR, RX_ADDR_P0_BUFFER, ADDRESS_WIDTH);
+    // Check values
+    readRegisterMulti(TX_ADDR, read_buffer, ADDRESS_WIDTH);
+    for (int8_t i = 0; i < ADDRESS_WIDTH; i++)
+    {
+        if (read_buffer[i] != RX_ADDR_P0_BUFFER[i])
+        {
+            success = 0;
+            break;
+        }
+        // Reset for next use
+        read_buffer[i] = 0;
     }
 
     // Flush Tx and Rx buffers with command
@@ -480,13 +506,9 @@ void printRadioSettings(void)
 struct NRF24_STATUS_DATA statusRadio(void)
 {
     struct NRF24_STATUS_DATA status_data;
-    uint8_t tx_buffer[2] = {0, 0};
-    uint8_t rx_buffer[2] = {0, 0};
     uint8_t status = 0;
 
-    tx_buffer[0] = STATUS;
-    transferSPI3(tx_buffer, rx_buffer, 2);
-    status = rx_buffer[1];
+    status = readRegisterSingle(STATUS);
     status_data.STATUS_BYTE = status;
     status_data.RX_DR = (status >> 6) & 1;
     status_data.TX_DS = (status >> 5) & 1;
@@ -494,25 +516,19 @@ struct NRF24_STATUS_DATA statusRadio(void)
     status_data.RX_P_NO = (status >> 1) & 7; // 3 bits
     status_data.TX_FULL = status & 1;
 
-    status = 0;
-    tx_buffer[0] = FIFO_STATUS;
-    transferSPI3(tx_buffer, rx_buffer, 2);
-    status = rx_buffer[1];
-    status_data.FIFO_STATUS_BYTE = status;
-    status_data.TX_REUSE = (status >> 6) & 1;
-    status_data.TX_FULL_F = (status >> 5) & 1;
-    status_data.TX_EMPTY = (status >> 4) & 1;
-    status_data.RX_FULL = (status >> 1) & 1;
-    status_data.RX_EMPTY = status & 1;
+    // status = 0;
+    // status = readRegisterSingle(FIFO_STATUS);
+    // status_data.FIFO_STATUS_BYTE = status;
+    // status_data.TX_REUSE = (status >> 6) & 1;
+    // status_data.TX_FULL_F = (status >> 5) & 1;
+    // status_data.TX_EMPTY = (status >> 4) & 1;
+    // status_data.RX_FULL = (status >> 1) & 1;
+    // status_data.RX_EMPTY = status & 1;
 
-    status = 0;
-    tx_buffer[0] = OBSERVE_TX;
-    transferSPI3(tx_buffer, rx_buffer, 2);
-    status = rx_buffer[1];
-    status_data.PLOS_CNT = status & 15;
-    status_data.ARC_CNT = (status >> 4) & 15;
-
-    disableCSN_SPI3();
+    // status = 0;
+    // status = readRegisterSingle(OBSERVE_TX);
+    // status_data.PLOS_CNT = status & 15;
+    // status_data.ARC_CNT = (status >> 4) & 15;
 
     return status_data;
 }
@@ -520,56 +536,17 @@ struct NRF24_STATUS_DATA statusRadio(void)
 /**
  * @brief Setup the NRF24L01 radio module in Tx mode
  *
- * @param channel Channel frequency to operate on
+ * @param None
  *
  * @return 0 on failure, 1 on success
  */
-uint8_t setTxMode(uint8_t channel)
+uint8_t setTxMode(void)
 {
     uint8_t success = 1;
     uint8_t check_value = 0xFF;
 
-    // Settings
-    uint8_t en_aa = 0x00;
-    uint8_t setup_retr = 0x00;
-
-    // Set RF Channel
-    writeRegisterSingle(RF_CH, channel);
-    // Check value
-    check_value = readRegisterSingle(RF_CH);
-    if (check_value != channel)
-        success = 0;
-    check_value = 0xFF;
-
-    // Set Auto Acknowledge
-    writeRegisterSingle(EN_AA, en_aa);
-    // Check value
-    check_value = readRegisterSingle(EN_AA);
-    if (check_value != en_aa)
-        success = 0;
-    check_value = 0xFF;
-
-    // Set retransmission
-    writeRegisterSingle(SETUP_RETR, setup_retr);
-    // Check value
-    check_value = readRegisterSingle(SETUP_RETR);
-    if (check_value != setup_retr)
-        success = 0;
-    check_value = 0xFF;
-
-    // Set Tx Address
-    writeRegisterMulti(TX_ADDR, RX_ADDR_P0_BUFFER, ADDRESS_WIDTH);
-    // Check values
-    uint8_t read_buffer[ADDRESS_WIDTH];
-    readRegisterMulti(TX_ADDR, read_buffer, ADDRESS_WIDTH);
-    for (int8_t i = 0; i < ADDRESS_WIDTH; i++)
-    {
-        if (read_buffer[i] != RX_ADDR_P0_BUFFER[i])
-        {
-            success = 0;
-            break;
-        }
-    }
+    // Turn Radio OFF
+    disableCE_SPI3();
 
     // Get current config
     uint8_t config = readRegisterSingle(CONFIG);
@@ -582,50 +559,26 @@ uint8_t setTxMode(uint8_t channel)
     if (check_value != config)
         success = 0;
 
+    // Turn Radio ON
+    enableCE_SPI3();
+
     return success;
 }
 
 /**
  * @brief Setup the NRF24L01 radio module in Rx mode
  *
- * @param channel Channel frequency to operate on
+ * @param None
  *
  * @return 0 on failure, 1 on success
  */
-uint8_t setRxMode(uint8_t channel)
+uint8_t setRxMode(void)
 {
     uint8_t success = 1;
     uint8_t check_value = 0xFF;
 
-    // Set RF Channel
-    writeRegisterSingle(RF_CH, channel);
-    // Check value
-    check_value = readRegisterSingle(RF_CH);
-    if (check_value != channel)
-        success = 0;
-    check_value = 0xFF;
-
-    // Set Payload size for Pipe 0
-    writeRegisterSingle(RX_PW_P0, P0_PACKET_SIZE);
-    // Check value
-    check_value = readRegisterSingle(RX_PW_P0);
-    if (check_value != P0_PACKET_SIZE)
-        success = 0;
-    check_value = 0xFF;
-
-    // Set Rx Pipe 0 Address
-    writeRegisterMulti(RX_ADDR_P0, RX_ADDR_P0_BUFFER, ADDRESS_WIDTH);
-    // Check values
-    uint8_t read_buffer[ADDRESS_WIDTH];
-    readRegisterMulti(RX_ADDR_P0, read_buffer, ADDRESS_WIDTH);
-    for (int8_t i = 0; i < ADDRESS_WIDTH; i++)
-    {
-        if (read_buffer[i] != RX_ADDR_P0_BUFFER[i])
-        {
-            success = 0;
-            break;
-        }
-    }
+    // Turn Radio OFF
+    disableCE_SPI3();
 
     // Get current config
     uint8_t config = readRegisterSingle(CONFIG);
@@ -637,6 +590,9 @@ uint8_t setRxMode(uint8_t channel)
     check_value = readRegisterSingle(CONFIG);
     if (check_value != config)
         success = 0;
+
+    // Turn Radio ON
+    enableCE_SPI3();
 
     return success;
 }
@@ -685,12 +641,7 @@ uint8_t dataAvailable(void)
 
     status = statusRadio();
 
-    if (status.RX_P_NO < 7)
-    {
-        return 1;
-    }
-
-    return 0;
+    return status.RX_P_NO < 7 ? 1 : 0;
 }
 
 /**
@@ -717,21 +668,25 @@ uint8_t txFIFOFull(void)
  *
  * @return None
  */
-void readRadio(uint8_t *data, enum PIPE_PACKET_SIZE pps)
+void readRadio(RadioPacket *packet, enum PIPE_PACKET_SIZE pps)
 {
-    // Turn radio on
-    enableCE_SPI3();
-    
+    // Make sure the array is aligned in memory
+    // So that when it gets cast to the struct it lines up
+    uint8_t __attribute__((aligned(2))) rx_buffer[pps];
+
     // Read Rx FIFO register
-    readRegisterMulti(R_RX_PAYLOAD, data, pps);
+    readRegisterMulti(R_RX_PAYLOAD, rx_buffer, pps);
 
     // Delay per documentation
     delayMicrosecond(100);
 
-    // Turn radio off
-    disableCE_SPI3();
+    // Turn radio on
+    enableCE_SPI3();
 
     flushRx();
+
+    // Cast data array into struct
+    *packet = *(RadioPacket *)rx_buffer;
 
     return;
 }
@@ -783,5 +738,35 @@ void flushTx(void)
     disableCSN_SPI3();
 
     delayMicrosecond(130);
+    return;
+}
+
+/**
+ * @brief Print the contents of a packet
+ *
+ * @param packet RadioPacket object to print
+ *
+ * @return None
+ */
+void printPacket(RadioPacket packet)
+{
+    usartWriteString("packet_id = ");
+    usartWriteNumber((int32_t)packet.packet_id);
+    usartWriteString("flags = ");
+    usartWriteNumber((int32_t)packet.flags);
+    usartWriteString("throttle = ");
+    usartWriteNumber((int32_t)packet.throttle);
+    usartWriteString("roll = ");
+    usartWriteNumber((int32_t)packet.roll);
+    usartWriteString("pitch = ");
+    usartWriteNumber((int32_t)packet.pitch);
+    usartWriteString("yaw = ");
+    usartWriteNumber((int32_t)packet.yaw);
+    usartWriteString("button = ");
+    usartWriteNumber((int32_t)packet.button);
+    usartWriteString("checksum = ");
+    usartWriteNumber((int32_t)packet.checksum);
+    usartWriteString("\n");
+
     return;
 }

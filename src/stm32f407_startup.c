@@ -147,7 +147,7 @@ void HardFault_Handler(void)
 
 void BusFault_Handler(void)
 {
-    initRedLED();
+    initBlueLED();
     while (1)
     {
         toggleLED(BLUE_LED);
@@ -158,7 +158,7 @@ void BusFault_Handler(void)
 
 void UsageFault_Handler(void)
 {
-    initRedLED();
+    initOrangeLED();
     while (1)
     {
         toggleLED(ORANGE_LED);

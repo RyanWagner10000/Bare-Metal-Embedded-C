@@ -62,12 +62,27 @@
 
 struct NRF24_STATUS_DATA
 {
-    int RX_DR, TX_DS, MAX_RT, TX_FULL, TX_EMPTY, RX_EMPTY, RX_FULL, TX_REUSE, TX_FULL_F, RX_P_NO, ARC_CNT, PLOS_CNT, STATUS_BYTE, FIFO_STATUS_BYTE;
+    uint8_t RX_DR, TX_DS, MAX_RT, TX_FULL, TX_EMPTY, RX_EMPTY, RX_FULL, TX_REUSE, TX_FULL_F, RX_P_NO, ARC_CNT, PLOS_CNT, STATUS_BYTE, FIFO_STATUS_BYTE;
 };
+
+// Packet structure from controller: 12 bytes
+#pragma pack(push, 1)
+typedef struct
+{
+    uint8_t packet_id;
+    uint8_t flags;
+    int16_t throttle;
+    int16_t roll;
+    int16_t pitch;
+    int16_t yaw;    // LB & RB values
+    uint8_t button; // bits: A, B, X, Y
+    uint8_t checksum;
+} RadioPacket;
+#pragma pack(pop)
 
 enum PIPE_PACKET_SIZE
 {
-    P0_PACKET_SIZE = 4,
+    P0_PACKET_SIZE = 12,
     P1_PACKET_SIZE = 32,
     P2_PACKET_SIZE = 32,
     P3_PACKET_SIZE = 32,
@@ -75,16 +90,17 @@ enum PIPE_PACKET_SIZE
     P5_PACKET_SIZE = 32
 };
 
-uint8_t initRadio(void);
+uint8_t initRadio(uint8_t channel);
 void printRadioSettings(void);
 struct NRF24_STATUS_DATA statusRadio(void);
-uint8_t setTxMode(uint8_t channel);
-uint8_t setRxMode(uint8_t channel);
+uint8_t setTxMode(void);
+uint8_t setRxMode(void);
 void transmitRadio(uint8_t *data, uint8_t length);
 uint8_t dataAvailable(void);
 uint8_t txFIFOFull(void);
-void readRadio(uint8_t *data, enum PIPE_PACKET_SIZE pps);
+void readRadio(RadioPacket *packet, enum PIPE_PACKET_SIZE pps);
 void flushRx(void);
 void flushTx(void);
+void printPacket(RadioPacket packet);
 
 #endif // NRF24_H
