@@ -17,6 +17,8 @@
 #define SPI1_BASE 0x40013000
 #define SPI1_EN (1U << 12)
 #define SPI1_CS (1U << 7)
+#define TXE (1U << 1)
+#define RXNE (1U << 0)
 
 #define SPI1 ((SPI1_TypeDef *)(SPI1_BASE))
 

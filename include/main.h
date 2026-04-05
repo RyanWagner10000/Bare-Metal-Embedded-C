@@ -17,5 +17,77 @@
 #include "usart.h"
 #include "berryIMU.h"
 #include "fpu.h"
+#include "timer6.h"
+#include "nrf24.h"
+
+// RF Channel for the Radio
+#define RX_P0_CHANNEL 0
+
+// Success/Fail light flashing time delays
+#define FLASH_FAIL 100
+#define FLASH_SUCCESS 250
+
+// Maximum motor/control values
+#define MAX_THROTTLE 90 // Out of 100
+#define MIN_THROTTLE 0  // Out of 100
+#define MIN_ROLL -10    // Degrees
+#define MAX_ROLL 10     // Degrees
+#define MIN_PITCH -10   // Degrees
+#define MAX_PITCH 10    // Degrees
+#define MIN_YAW 0       // Degrees/sec
+#define MAX_YAW 5       // Degrees/sec
+#define MIN_INT16 -32768
+#define MAX_INT16 32767
+
+// Roll, Pitch, and Yaw gains for mixer
+#define PITCH_GAIN 0.3f
+#define ROLL_GAIN  0.3f
+#define YAW_GAIN   0.15f
+
+enum CONTROLLER_BUTTON
+{
+    BUTTON_A = 0,
+    BUTTON_B = 1,
+    BUTTON_X = 2,
+    BUTTON_Y = 3,
+    BUTTON_LB = 4,
+    BUTTON_RB = 5,
+    BUTTON_L3 = 9,
+    BUTTON_R3 = 10
+};
+
+typedef struct
+{
+    uint8_t duty1;
+    uint8_t duty2;
+    uint8_t duty3;
+    uint8_t duty4;
+} DutyCycles;
+
+// enum IMU_STATE
+// {
+//     IDLE,
+//     RECEIVING,
+//     CALCULATING
+// };
+
+enum RADIO_STATE
+{
+    TRANSMIT,
+    RECEIVE
+};
+
+// enum FILTER_STATE
+// {
+//     IDLE,
+//     UPDATING
+// };
+
+enum MOTOR_STATE
+{
+    OFF,
+    IDLE,
+    OPERATING
+};
 
 #endif // MAIN_H

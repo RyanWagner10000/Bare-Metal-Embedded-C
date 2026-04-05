@@ -12,10 +12,15 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
+#include "printing.h"
 
 #define SPI3_BASE 0x40003C00
 #define SPI3_EN (1U << 15)
-#define SPI3_CS (1U << 13)
+#define SPI3_CE (1U << 1)
+#define SPI3_CSN (1U << 2)
+#define RXNE (1U << 0)
+#define TXE (1U << 1)
+#define BUSY (1U << 7)
 
 #define SPI3 ((SPI3_TypeDef *)(SPI3_BASE))
 
@@ -33,9 +38,10 @@ typedef struct
 } SPI3_TypeDef;
 
 void initSPI3(void);
-void transmitSPI3(uint8_t *address, uint32_t size);
-void receiveSPI3(uint8_t *address, uint32_t size);
-void enableCS_SPI3(void);
-void disableCS_SPI3(void);
+void transferSPI3(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length);
+void enableCSN_SPI3(void);
+void disableCSN_SPI3(void);
+void enableCE_SPI3(void);
+void disableCE_SPI3(void);
 
 #endif // SPI3_H

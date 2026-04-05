@@ -110,13 +110,14 @@ void usartWriteChar(uint8_t character)
 /**
  * @brief Write an integer to the USART2 peripheral
  *
- * @param value Unsigned 8-bit integer to "print" to the terminal
+ * @param value Unsigned 32-bit integer to "print" to the terminal
  *
  * @return None
  */
-void usartWriteNumber(uint32_t value)
+void usartWriteNumber(int32_t value)
 {
-    char buffer[12]; // Max 10 digits for uint32_t + null terminator + 1 extra
+    // Max 10 digits for int32_t + null terminator + 1 extra for sign
+    char buffer[12]; 
     int i = 0;
 
     // Handle zero case
@@ -126,6 +127,13 @@ void usartWriteNumber(uint32_t value)
         return;
     }
 
+    uint8_t is_neg = 0;
+    if (value < 0)
+    {
+        is_neg = 1;
+        value *= -1; // Make positive
+    }
+
     // Convert number to string (reversed)
     while (value > 0)
     {
@@ -133,7 +141,13 @@ void usartWriteNumber(uint32_t value)
         value /= 10;
     }
 
-    // Print in correct order (reverse the buffer)
+    // Add the negative sign
+    if (is_neg)
+    {
+        buffer[i++] = '-';
+    }
+
+    // Print in correct order (reverse through the buffer)
     while (i > 0)
     {
         usartWriteChar(buffer[--i]);

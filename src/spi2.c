@@ -91,7 +91,6 @@ void initSPI2(void)
 void transmitSPI2(uint8_t *address, uint32_t size)
 {
     uint32_t i = 0;
-    address++;
 
     while (i < size)
     {
@@ -100,8 +99,7 @@ void transmitSPI2(uint8_t *address, uint32_t size)
             ;
 
         // Write data to register
-        // SPI2->DR = address[i];
-        SPI2->DR = 0x8F;
+        SPI2->DR = address[i];
         i++;
     }
 
@@ -119,8 +117,7 @@ void transmitSPI2(uint8_t *address, uint32_t size)
     {
         (void)SPI2->DR;
     }
-
-    // (void)SPI2->SR; // Clear OVR
+    (void)SPI2->SR; // Clear OVR
 
     return;
 }
@@ -142,7 +139,7 @@ void receiveSPI2(uint8_t *data, uint32_t size)
             ;
 
         // Send dummy data
-        SPI2->DR = 0;
+        SPI2->DR = 0x00;
 
         // Wait for RXNE FLAG to be set
         while (!(SPI2->SR & (1U << 0)))
