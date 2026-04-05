@@ -39,6 +39,11 @@
 #define MIN_INT16 -32768
 #define MAX_INT16 32767
 
+// Roll, Pitch, and Yaw gains for mixer
+#define PITCH_GAIN 0.3f
+#define ROLL_GAIN  0.3f
+#define YAW_GAIN   0.15f
+
 enum CONTROLLER_BUTTON
 {
     BUTTON_A = 0,

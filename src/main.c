@@ -8,6 +8,8 @@
 
 #include "main.h"
 
+uint8_t packets_received = 0;
+
 /**
  * @brief Flash all LEDs
  *
@@ -129,14 +131,53 @@ void initModules(void)
     flashAllLED(FLASH_SUCCESS);
 }
 
+/**
+ * @brief Clamp a value based on a min and max
+ *
+ * @param value Value to clamp between low and high
+ * @param low Low/minimum value to clamp to
+ * @param high High/Maximum value to clamp to
+ *
+ * @return Clamped float value
+ */
+float clamp(float value, float low, float high) {
+    return value < low ? low : (value > high ? high : value);
+}
 
+/**
+ * @brief Initiate all peripherals for the system
+ *
+ * @param packet RadioPacket object with information
+ * @param duty_cycles DutyCycles object to set duty cycles
+ *
+ * @return None
+ */
 void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
 {
-    // Set the duty cycles for the motors based on recent packet info
-    duty_cycles->duty1 = 0;
-    duty_cycles->duty2 = 0;
-    duty_cycles->duty3 = 0;
-    duty_cycles->duty4 = 0;
+    // Normalize values: throttle [0, 1], roll, pitch, yaw [-1, 1]
+    float norm_throttle = (float)(packet.throttle - MIN_INT16) / (float)(MAX_INT16 - MIN_INT16); // [0, 1]
+    float norm_pitch = (float)packet.pitch / (float)MAX_INT16;                                   // [-1,1]
+    float norm_roll = (float)packet.roll / (float)MAX_INT16;                                     // [-1,1]
+    float norm_yaw = (float)packet.yaw / (float)MAX_INT16;                                       // [-1,1]
+
+    // Mix the values
+    float m1 = norm_throttle + PITCH_GAIN * norm_pitch - ROLL_GAIN * norm_roll - YAW_GAIN * norm_yaw;
+    float m2 = norm_throttle + PITCH_GAIN * norm_pitch + ROLL_GAIN * norm_roll + YAW_GAIN * norm_yaw;
+    float m3 = norm_throttle - PITCH_GAIN * norm_pitch - ROLL_GAIN * norm_roll + YAW_GAIN * norm_yaw;
+    float m4 = norm_throttle - PITCH_GAIN * norm_pitch + ROLL_GAIN * norm_roll - YAW_GAIN * norm_yaw;
+
+    // Clamp mixed values to PWM range [0 - 100]
+    duty_cycles->duty1 = (uint8_t)(clamp(m1, 0.0f, 0.9f) * 100.0f);
+    duty_cycles->duty2 = (uint8_t)(clamp(m2, 0.0f, 1.0f) * 100.0f);
+    duty_cycles->duty3 = (uint8_t)(clamp(m3, 0.0f, 1.0f) * 100.0f);
+    duty_cycles->duty4 = (uint8_t)(clamp(m4, 0.0f, 1.0f) * 100.0f);
+
+    return;
+}
+
+void logPacketDrop(packet_id)
+{
+    return;
 }
 
 /**
@@ -197,7 +238,9 @@ int main(void)
 
                 // Print packet for confirmation
                 // printPacket(packet);
-                calculateMotorDuty(packet, &duty_cycles);
+
+                // Incrememnt packets received to be calculated
+                packets_received++;
             }
             break;
         }
@@ -230,6 +273,9 @@ int main(void)
             break;
         }
         }
+
+        // Calculate motor duty cycles from packet
+        calculateMotorDuty(packet, &duty_cycles);
 
         // switch (motor_state)
         // {
