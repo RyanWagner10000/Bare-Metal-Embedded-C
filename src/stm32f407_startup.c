@@ -131,6 +131,22 @@ void TIM2_IRQHandler(void)
 
         // Set flag for main loop
         setImuFlag(1);
+
+        // Set flag for main loop
+        setPWMFlag(1);
+
+        // Increment tick for one second counter
+        incrementTickCount();
+
+        if (getTickCount() >= 250)
+        {
+            // Reset tick
+            setTickCount(0);
+            // Set flag for 1 sec timer
+            setOneSecFlag(1);
+        }
+
+        
     }
 }
 

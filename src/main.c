@@ -140,12 +140,13 @@ void initModules(void)
  *
  * @return Clamped float value
  */
-float clamp(float value, float low, float high) {
+float clamp(float value, float low, float high)
+{
     return value < low ? low : (value > high ? high : value);
 }
 
 /**
- * @brief Initiate all peripherals for the system
+ * @brief Calculate the duty cycles for the motors based on recent packet info
  *
  * @param packet RadioPacket object with information
  * @param duty_cycles DutyCycles object to set duty cycles
@@ -155,10 +156,10 @@ float clamp(float value, float low, float high) {
 void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
 {
     // Normalize values: throttle [0, 1], roll, pitch, yaw [-1, 1]
-    float norm_throttle = (float)(packet.throttle - MIN_INT16) / (float)(MAX_INT16 - MIN_INT16); // [0, 1]
-    float norm_pitch = (float)packet.pitch / (float)MAX_INT16;                                   // [-1,1]
-    float norm_roll = (float)packet.roll / (float)MAX_INT16;                                     // [-1,1]
-    float norm_yaw = (float)packet.yaw / (float)MAX_INT16;                                       // [-1,1]
+    float norm_throttle = (float)(packet.throttle) / (float)(MAX_INT16);                    // [0, 1]
+    float norm_pitch = (((float)packet.pitch - (float)MIN_INT16) / (32767.5)) - 1.0;        // [-1,1]
+    float norm_roll = ((((float)packet.roll * -1.0) - (float)MIN_INT16) / (32767.5)) - 1.0; // [-1,1]
+    float norm_yaw = (((float)packet.yaw - (float)MIN_INT16) / (32767.5)) - 1.0;            // [-1,1]
 
     // Mix the values
     float m1 = norm_throttle + PITCH_GAIN * norm_pitch - ROLL_GAIN * norm_roll - YAW_GAIN * norm_yaw;
@@ -166,17 +167,28 @@ void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
     float m3 = norm_throttle - PITCH_GAIN * norm_pitch - ROLL_GAIN * norm_roll + YAW_GAIN * norm_yaw;
     float m4 = norm_throttle - PITCH_GAIN * norm_pitch + ROLL_GAIN * norm_roll - YAW_GAIN * norm_yaw;
 
-    // Clamp mixed values to PWM range [0 - 100]
+    // Clamp mixed values to PWM range [0 - 90]
     duty_cycles->duty1 = (uint8_t)(clamp(m1, 0.0f, 0.9f) * 100.0f);
-    duty_cycles->duty2 = (uint8_t)(clamp(m2, 0.0f, 1.0f) * 100.0f);
-    duty_cycles->duty3 = (uint8_t)(clamp(m3, 0.0f, 1.0f) * 100.0f);
-    duty_cycles->duty4 = (uint8_t)(clamp(m4, 0.0f, 1.0f) * 100.0f);
+    duty_cycles->duty2 = (uint8_t)(clamp(m2, 0.0f, 0.9f) * 100.0f);
+    duty_cycles->duty3 = (uint8_t)(clamp(m3, 0.0f, 0.9f) * 100.0f);
+    duty_cycles->duty4 = (uint8_t)(clamp(m4, 0.0f, 0.9f) * 100.0f);
 
     return;
 }
 
-void logPacketDrop(packet_id)
+/**
+ * @brief Print the number of packets received over one second
+ *
+ * @param None
+ *
+ * @return None
+ */
+void logPacketDrop(void)
 {
+    usartWriteString("Received Packets: ");
+    usartWriteNumber(packets_received);
+    usartWriteChar('\n');
+    packets_received = 0;
     return;
 }
 
@@ -201,7 +213,7 @@ int main(void)
     offLED(BLUE_LED);
 
     // Struct to hold TxRx data from ground-station
-    RadioPacket packet;
+    RadioPacket packet = {0, 0, 0, 0, 0, 0, 255, 0};
     DutyCycles duty_cycles = {0, 0, 0, 0};
     uint8_t txrx = 1; // 0 for tx, 1 for rx
 
@@ -209,7 +221,7 @@ int main(void)
     // enum IMU_STATE imu_state = IDLE;
     enum RADIO_STATE radio_state = RECEIVE;
     // enum FILTER_STATE filter_state = IDLE;
-    // enum MOTOR_STATE motor_state = OFF;
+    enum MOTOR_STATE motor_state = OFF;
 
     uint8_t temp = getWhoAmIxlgy(IMU1);
     usartWriteString("IMU1 Acc & Gyro ID: ");
@@ -217,6 +229,7 @@ int main(void)
 
     while (1)
     {
+        // Handle radio Tx/Rx
         switch (radio_state)
         {
         case RECEIVE:
@@ -240,7 +253,7 @@ int main(void)
                 // printPacket(packet);
 
                 // Incrememnt packets received to be calculated
-                packets_received++;
+                // packets_received++;
             }
             break;
         }
@@ -274,42 +287,89 @@ int main(void)
         }
         }
 
-        // Calculate motor duty cycles from packet
-        calculateMotorDuty(packet, &duty_cycles);
+        if (getOneSecFlag())
+        {
+            // Reset flag
+            setOneSecFlag(0);
 
-        // switch (motor_state)
-        // {
-        // case OFF:
-        // {
-        //     // Set speed motor output
-        //     setDuty(CH1, 0);
-        //     setDuty(CH2, 0);
-        //     setDuty(CH3, 0);
-        //     setDuty(CH4, 0);
-        //     break;
-        // }
-        // case IDLE:
-        // {
-        //     // Set speed motor output
-        //     setDuty(CH1, 20);
-        //     setDuty(CH2, 20);
-        //     setDuty(CH3, 20);
-        //     setDuty(CH4, 20);
-        //     break;
-        // }
-        // case OPERATING:
-        // {
-        //     // Set speed motor output
-        //     // setDuty(CH1, 0);
-        //     // setDuty(CH2, 0);
-        //     // setDuty(CH3, 0);
-        //     // setDuty(CH4, 0);
-        //     break;
-        // }
-        // default:
-        // {
-        //     break;
-        // }
-        // }
+            // Print reception rate
+            // logPacketDrop();
+        }
+
+        if (getImuFlag())
+        {
+            // Reset flag
+            setImuFlag(0);
+        }
+
+        if (getPWMFlag())
+        {
+            // Reset flag
+            setPWMFlag(0);
+
+            switch (motor_state)
+            {
+            case OFF:
+            {
+                // Check for power-up/down command
+                if (packet.button == 0)
+                {
+                    // User has initiated power-up
+                    motor_state = IDLE;
+                }
+                // Set speed motor output
+                setDuty(CH1, 0);
+                setDuty(CH2, 0);
+                setDuty(CH3, 0);
+                setDuty(CH4, 0);
+                break;
+            }
+            case IDLE:
+            {
+                // Set speed motor output
+                setDuty(CH1, 5);
+                setDuty(CH2, 5);
+                setDuty(CH3, 5);
+                setDuty(CH4, 5);
+
+                motor_state = OPERATING;
+                break;
+            }
+            case OPERATING:
+            {
+                // Check for power-up/down command
+                if (motor_state == OPERATING && packet.button == 1)
+                {
+                    // User has initiated a power-down
+                    motor_state = OFF;
+                }
+
+                // Calculate motor duty cycles from packet
+                calculateMotorDuty(packet, &duty_cycles);
+
+                // usartWriteString("  1: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty1);
+                // usartWriteString("  2: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty2);
+                // usartWriteString("  3: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty3);
+                // usartWriteString("  4: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty4);
+                // usartWriteString("    \r");
+
+                // Set speed motor output
+                setDuty(CH1, duty_cycles.duty1);
+                setDuty(CH3, duty_cycles.duty2);
+                setDuty(CH2, duty_cycles.duty3);
+                setDuty(CH4, duty_cycles.duty4);
+                break;
+            }
+            default:
+            {
+                motor_state = OFF;
+                break;
+            }
+            }
+        }
     }
 }

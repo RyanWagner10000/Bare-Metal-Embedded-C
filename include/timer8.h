@@ -20,8 +20,8 @@
 
 #define TIM8_EN (1U << 1)
 #define TIM8_MOTOR_PSC 15
-#define TIM8_MOTOR_ARR 19999 // 20ms period
-// #define TIM8_MOTOR_ARR 2499  // 2.5ms period
+// #define TIM8_MOTOR_ARR 19999 // 20ms period
+#define TIM8_MOTOR_ARR 2499  // 2.5ms period
 #define ESC_MIN_US 1100
 #define ESC_RANGE_US 820
 

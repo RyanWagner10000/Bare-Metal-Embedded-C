@@ -123,7 +123,7 @@ void usartWriteNumber(int32_t value)
     // Handle zero case
     if (value == 0)
     {
-        usartWriteString("0\n");
+        usartWriteString("0");
         return;
     }
 
@@ -153,7 +153,7 @@ void usartWriteNumber(int32_t value)
         usartWriteChar(buffer[--i]);
     }
 
-    usartWriteChar('\n');
+    // usartWriteChar('\n');
 }
 
 /**

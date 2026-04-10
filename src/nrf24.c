@@ -752,21 +752,29 @@ void printPacket(RadioPacket packet)
 {
     usartWriteString("packet_id = ");
     usartWriteNumber((int32_t)packet.packet_id);
+    usartWriteChar('\n');
     usartWriteString("flags = ");
     usartWriteNumber((int32_t)packet.flags);
+    usartWriteChar('\n');
     usartWriteString("throttle = ");
     usartWriteNumber((int32_t)packet.throttle);
+    usartWriteChar('\n');
     usartWriteString("roll = ");
     usartWriteNumber((int32_t)packet.roll);
+    usartWriteChar('\n');
     usartWriteString("pitch = ");
     usartWriteNumber((int32_t)packet.pitch);
+    usartWriteChar('\n');
     usartWriteString("yaw = ");
     usartWriteNumber((int32_t)packet.yaw);
+    usartWriteChar('\n');
     usartWriteString("button = ");
     usartWriteNumber((int32_t)packet.button);
+    usartWriteChar('\n');
     usartWriteString("checksum = ");
     usartWriteNumber((int32_t)packet.checksum);
-    usartWriteString("\n");
+    usartWriteChar('\n');
+    usartWriteChar('\n');
 
     return;
 }

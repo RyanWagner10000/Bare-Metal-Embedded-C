@@ -16,8 +16,8 @@
 
 #define SPI3_BASE 0x40003C00
 #define SPI3_EN (1U << 15)
-#define SPI3_CE (1U << 1)
-#define SPI3_CSN (1U << 2)
+#define SPI3_CE (1U << 3)
+#define SPI3_CSN (1U << 4)
 #define RXNE (1U << 0)
 #define TXE (1U << 1)
 #define BUSY (1U << 7)

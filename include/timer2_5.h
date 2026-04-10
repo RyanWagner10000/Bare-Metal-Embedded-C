@@ -48,6 +48,13 @@ typedef struct
 
 void setImuFlag(uint8_t value);
 uint8_t getImuFlag(void);
+void setPWMFlag(uint8_t value);
+uint8_t getPWMFlag(void);
+void setOneSecFlag(uint8_t value);
+uint8_t getOneSecFlag(void);
+uint8_t getTickCount(void);
+void incrementTickCount(void);
+void setTickCount(uint8_t value);
 void initTimer2(void);
 void initTimer5(void);
 void delayMillisecond(uint32_t num_milliseconds);

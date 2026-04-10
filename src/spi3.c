@@ -33,15 +33,15 @@ void initSPI3(void)
     GPIOC->MODER &= ~(3U << 20); // Clear 0b00
     GPIOC->MODER &= ~(3U << 22); // Clear 0b00
     GPIOC->MODER &= ~(3U << 24); // Clear 0b00
-    GPIOD->MODER &= ~(3U << 2);  // Clear 0b00
-    GPIOD->MODER &= ~(3U << 4);  // Clear 0b00
+    GPIOD->MODER &= ~(3U << 6);  // Clear 0b00
+    GPIOD->MODER &= ~(3U << 8);  // Clear 0b00
 
     // Then set
     GPIOC->MODER |= (2U << 20); // AF mode 0b10
     GPIOC->MODER |= (2U << 22); // AF mode 0b10
     GPIOC->MODER |= (2U << 24); // AF mode 0b10
-    GPIOD->MODER |= (1U << 2);  // Output mode 0b01
-    GPIOD->MODER |= (1U << 4);  // Output mode 0b01
+    GPIOD->MODER |= (1U << 6);  // Output mode 0b01
+    GPIOD->MODER |= (1U << 8);  // Output mode 0b01
 
     // Set alternate function mode for PC10, PC11, PC12
     // Clear first
@@ -96,91 +96,6 @@ void initSPI3(void)
 
     // Turn on SPI3
     SPI3->CR1 |= (1U << 6);
-
-    return;
-}
-
-/**
- * @brief Transmit messages on the SPI3 peripheral
- *
- * @param address Array of addresses to transmit
- * @param size Size of array messages to transmit
- *
- * @return None
- */
-void transmitSPI3(uint8_t *address, uint32_t size)
-{
-    uint32_t i = 0;
-
-    while (i < size)
-    {
-        // Wait until TXE is set
-        while (!(SPI3->SR & (1U << 1)))
-            ;
-
-        // Write data to register
-        usartWriteString("Writing to DR: ");
-        usartWriteNumber((int32_t)address[i]);
-        SPI3->DR = address[i];
-        i++;
-    }
-
-    // Wait until TXE is set
-    while (!(SPI3->SR & (1U << 1)))
-        ;
-
-    // Wait for BUSY flag to reset
-    while ((SPI3->SR & (1U << 7)))
-        ;
-
-    // Clear OVR flag
-    // Drain the RX buffer of the junk byte clocked in during TX
-    while (SPI3->SR & (1U << 0))
-    {
-        (void)SPI3->DR;
-    }
-    (void)SPI3->SR; // Clear OVR
-
-    return;
-}
-
-/**
- * @brief Receives messages on the SPI3 peripheral
- *
- * @param data Array for recieve data
- * @param size Size of array messages to recieve
- *
- * @return None
- */
-void receiveSPI3(uint8_t *data, uint32_t size)
-{
-    uint8_t i = 0;
-    while (size)
-    {
-        // Wait until transmit buffer is empty
-        while (!(SPI3->SR & (1U << 1)))
-            ;
-
-        // Send dummy data
-        SPI3->DR = 0xFF;
-
-        // Wait for RXNE FLAG to be set
-        while (!(SPI3->SR & (1U << 0)))
-            ;
-
-        // Read data from register
-        uint32_t temp = (SPI3->DR);
-        usartWriteString("Read value: ");
-        usartWriteNumber((int32_t)temp);
-        data[i] = (uint8_t)temp;
-        ++i;
-        // *data++ = (uint8_t)(SPI3->DR);
-        size--;
-    }
-
-    // Wait for BUSY flag to reset
-    while ((SPI3->SR & (1U << 7)))
-        ;
 
     return;
 }

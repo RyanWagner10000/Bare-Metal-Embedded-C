@@ -20,8 +20,8 @@
 void initTimer8(void)
 {
     // 400 Hz timer for motor control/ESC's
-    // UEF = 16,000,000 / ((159 + 1) * (249 + 1)) = 400 Hz
-    // UEF = 16,000,000 / ((159 + 1) * (1999 + 1)) = 50 Hz
+    // UEF = 16,000,000 / ((15 + 1) * (2499 + 1)) = 400 Hz
+    // UEF = 16,000,000 / ((15 + 1) * (19999 + 1)) = 50 Hz
     
     // Enable clock access to Advanced Timer 8
     RCC->APB2ENR |= TIM8_EN;
@@ -34,10 +34,28 @@ void initTimer8(void)
     GPIOC->MODER |= (170U << 12);  // Set
 
     // Set alternate function type AF3 for pins 6, 7, 8, 9
-    // GPIOC->AFRL &= ~(255U << 24); // Clear
+    GPIOC->AFRL &= ~(255U << 24); // Clear
     GPIOC->AFRL |= (51U << 24);   // Set
-    // GPIOC->AFRH &= ~(255U << 0);  // Clear
+    GPIOC->AFRH &= ~(255U << 0);  // Clear
     GPIOC->AFRH |= (51U << 0);    // Set
+
+    // Set output type to push-pull
+    GPIOC->OTYPER &= ~(1U << 6);
+    GPIOC->OTYPER &= ~(1U << 7);
+    GPIOC->OTYPER &= ~(1U << 8);
+    GPIOC->OTYPER &= ~(1U << 9);
+
+    // Set high speed for SPI pins
+    GPIOC->OSPEEDR |= (3U << 12);
+    GPIOC->OSPEEDR |= (3U << 14);
+    GPIOC->OSPEEDR |= (3U << 16);
+    GPIOC->OSPEEDR |= (3U << 18);
+
+    // No pull-up / pull-down
+    GPIOC->PUPDR &= ~(3U << 12);
+    GPIOC->PUPDR &= ~(3U << 14);
+    GPIOC->PUPDR &= ~(3U << 16);
+    GPIOC->PUPDR &= ~(3U << 18);
 
     // Set Auto-reload preload
     TIM8->CR1 |= (1U << 7);
