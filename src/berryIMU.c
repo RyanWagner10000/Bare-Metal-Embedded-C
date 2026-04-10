@@ -251,24 +251,105 @@ void initGyroscope(void)
  */
 void initMagnetometer(void)
 {
-    // Turn master I2C on
+    // Enable Embedded Functions
+    writeRegisterSingle(IMU1, CTRL10_C, 0x04);
+
+    // Turn master I2C on and Pull-up Aux On
+    // writeRegisterSingle(IMU1, MASTER_CONFIG, 0x09);
     writeRegisterSingle(IMU1, MASTER_CONFIG, 0x01);
-    // writeRegisterSingle(IMU2, MASTER_CONFIG, 0x01);
+    // writeRegisterSingle(IMU1, MASTER_CONFIG, 0x05);
+
+    // Enable Access to Bank A registers
+    writeRegisterSingle(IMU1, FUNC_CFG_ACCESS, (1U << 7));
+
+    // Set Mag ON with SLV0
+
+    // Set SLV0 Address, bit 0 = 0 write operation
+    uint8_t address = (MAG_ADDRESS << 1) | 0x00;
+    writeRegisterSingle(IMU1, SLV0_ADD, address);
+
+    // Set SLV0 Sub Address
+    writeRegisterSingle(IMU1, SLV0_SUBADD, CTRL_REG3);
+
+    // Set Data to be written: Set magnetometer to continuous mode
+    writeRegisterSingle(IMU1, DATAWRITE_SRC_MODE_SUB_SLV0, 0x00);
+
+    // Set SLV0 Config Address: write operation 1 time
+    writeRegisterSingle(IMU1, SLAVE0_CONFIG, 0x01);
+
+    usartWriteString("HERE\n");
+
+    // Wait till operation is complete
+    while (!(readRegisterSingle(IMU1, FUNC_SRC1) & 0x01))
+        ;
+
+    usartWriteString("AFTER\n");
+
+    // Set SLV0 Sub Address
+    writeRegisterSingle(IMU1, SLV0_SUBADD, CTRL_REG1);
+
+    // Set Data to be written: High performance mode, fast ODR = 300Hz
+    writeRegisterSingle(IMU1, DATAWRITE_SRC_MODE_SUB_SLV0, 0x42);
+
+    // Set SLV0 Config Address: write operation 1 time
+    writeRegisterSingle(IMU1, SLAVE0_CONFIG, 0x01);
+
+    // Wait till operation is complete
+    while (!(readRegisterSingle(IMU1, FUNC_SRC1) & 0x01))
+        ;
+
+    // Disable Access to Bank A registers
+    writeRegisterSingle(IMU1, FUNC_CFG_ACCESS, 0x00);
 
     return;
 }
 
 /**
- * @brief Returns the ID of the Accelerometer and Gyroscope
+ * @brief Returns the ID of the Accelerometer and Gyroscope sensor
  *
  * @param imu_num IMU number (typically 1 or 2)
  *
- * @return None
+ * @return Value at WHO_AM_I register
  */
 uint8_t getWhoAmIxlgy(uint8_t imu_num)
 {
     // Should be 0x6A
     return readRegisterSingle(imu_num, WHO_AM_I);
+}
+
+/**
+ * @brief Returns the ID of the Magnetometer sensor
+ *
+ * @param imu_num IMU number (typically 1 or 2)
+ *
+ * @return Value at WHO_AM_I register
+ */
+uint8_t getWhoAmIMag(uint8_t imu_num)
+{
+    // Enable Access to Bank A registers
+    writeRegisterSingle(imu_num, FUNC_CFG_ACCESS, (1U << 7));
+
+    // Set SLV0 Address, bit 0 = 1 read operation
+    uint8_t address = (MAG_ADDRESS << 1) | 0x01;
+    writeRegisterSingle(imu_num, SLV0_ADD, address);
+
+    // Set SLV0 Sub Address
+    writeRegisterSingle(imu_num, SLV0_SUBADD, WHO_AM_I_MAG);
+
+    // Set SLV0 Config Address: read operation 1 time
+    writeRegisterSingle(imu_num, SLAVE0_CONFIG, 0x01);
+
+    // Wait till operation is complete
+    while (!(readRegisterSingle(imu_num, FUNC_SRC1) & 0x01))
+        ;
+
+    uint8_t name = readRegisterSingle(imu_num, SENSORHUB1_REG);
+
+    // Disable Access to Bank A registers
+    writeRegisterSingle(imu_num, FUNC_CFG_ACCESS, 0x00);
+
+    // Should be 0x3D or 61
+    return name;
 }
 
 /**
@@ -281,7 +362,7 @@ uint8_t getWhoAmIxlgy(uint8_t imu_num)
 uint8_t statusGyro(uint8_t imu_num)
 {
     uint8_t status = readRegisterSingle(imu_num, STATUS_REG);
-    
+
     // Return 1st bit value
     return (status & (1 << 1));
 }
@@ -311,26 +392,27 @@ uint8_t statusAccel(uint8_t imu_num)
 void initBerryIMU(void)
 {
     // Alternate IMU1 and IMU2 commands to initialize everything
+    // initAccelerometer();
 
-    initAccelerometer();
+    // initGyroscope();
 
-    initGyroscope();
+    // initMagnetometer();
 
     // Set the mode to Continuous
     // Set FIFO ODR to 1.66 kHz
-    writeRegisterSingle(IMU1, FIFO_CTRL5, 0x44);
+    // writeRegisterSingle(IMU1, FIFO_CTRL5, 0x44);
     // writeRegisterSingle(IMU2, FIFO_CTRL5, 0x44);
 
     // // Enable gyroscope digital LPF = 0b00000010
-    writeRegisterSingle(IMU1, CTRL4_C, 0x02);
+    // writeRegisterSingle(IMU1, CTRL4_C, 0x02);
     // writeRegisterSingle(IMU2, CTRL4_C, 0x02);
 
     // // Enable circular burst-mode: Gyroscope + accelerometer + mag registers
-    writeRegisterSingle(IMU1, CTRL5_C, 0xE0);
+    // writeRegisterSingle(IMU1, CTRL5_C, 0xE0);
     // writeRegisterSingle(IMU2, CTRL5_C, 0xE0);
 
     // // Gyroscopes low pass filter BW: 925 Hz
-    writeRegisterSingle(IMU1, CTRL6_C, 0x03);
+    // writeRegisterSingle(IMU1, CTRL6_C, 0x03);
     // writeRegisterSingle(IMU2, CTRL6_C, 0x03);
 
     return;
@@ -369,6 +451,27 @@ void getGyroData(uint8_t imu_num, int16_t *xyz)
 {
     uint8_t data_buffer[] = {0, 0, 0, 0, 0, 0};
     readRegisterMulti(imu_num, OUTX_L_G, data_buffer, 6);
+
+    // Combine high and low bytes to form data
+    xyz[0] = ((data_buffer[1] << 8) | data_buffer[0]);
+    xyz[1] = ((data_buffer[3] << 8) | data_buffer[2]);
+    xyz[2] = ((data_buffer[5] << 8) | data_buffer[4]);
+
+    return;
+}
+
+/**
+ * @brief Get 3-axis magnetometer data
+ *
+ * @param imu_num IMU number (typically 1 or 2)
+ * @param xyz Array of values to hold 16-bit X, Y, and Z values
+ *
+ * @return None
+ */
+void getMagData(uint8_t imu_num, int16_t *xyz)
+{
+    uint8_t data_buffer[] = {0, 0, 0, 0, 0, 0};
+    readRegisterMulti(imu_num, OUT_MAG_RAW_X_L, data_buffer, 6);
 
     // Combine high and low bytes to form data
     xyz[0] = ((data_buffer[1] << 8) | data_buffer[0]);
@@ -443,6 +546,46 @@ void logRawGyroData(uint8_t imu_num)
     char concat[MAX_STRING_CONCAT];
 
     strConcat("Gyro: x = ", x_str, concat);
+    strConcat(concat, " | ", concat);
+
+    strConcat(concat, "y = ", concat);
+    strConcat(concat, y_str, concat);
+    strConcat(concat, " | ", concat);
+
+    strConcat(concat, "z = ", concat);
+    strConcat(concat, z_str, concat);
+    strConcat(concat, "\n", concat);
+
+    usartWriteString(concat);
+
+    return;
+}
+
+/**
+ * @brief Reads data from magnetometer registers and prints x, y, z
+ *
+ * @param imu_num IMU number (typically 1 or 2)
+ *
+ * @return None
+ */
+void logRawMagData(uint8_t imu_num)
+{
+    int16_t data_buffer[3] = {0, 0, 0};
+
+    // Get data from sensor
+    getMagData(imu_num, data_buffer);
+
+    char x_str[MAX_INT_STRING];
+    char y_str[MAX_INT_STRING];
+    char z_str[MAX_INT_STRING];
+
+    intToStr((int32_t)data_buffer[0], x_str);
+    intToStr((int32_t)data_buffer[1], y_str);
+    intToStr((int32_t)data_buffer[2], z_str);
+
+    char concat[MAX_STRING_CONCAT];
+
+    strConcat("Mag: x = ", x_str, concat);
     strConcat(concat, " | ", concat);
 
     strConcat(concat, "y = ", concat);
