@@ -62,7 +62,7 @@ void initSPI2(void)
     SPI2->CR1 |= (3U << 0);
 
     // Enable FULL duplex
-    // SPI1->CR1 &= ~(1U << 10);
+    // SPI2->CR1 &= ~(1U << 10);
 
     // Set MSB first
     SPI2->CR1 &= ~(1U << 7);
@@ -80,79 +80,39 @@ void initSPI2(void)
     return;
 }
 
-/**
- * @brief Transmit messages on the SPI2 peripheral
- *
- * @param address Array of addresses to transmit
- * @param size Size of array messages to transmit
- *
- * @return None
- */
-void transmitSPI2(uint8_t *address, uint32_t size)
+void transferSPI2(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
 {
-    uint32_t i = 0;
-
-    while (i < size)
+    uint8_t i = 0;
+    while (i < length)
     {
         // Wait until TXE is set
-        while (!(SPI2->SR & (1U << 1)))
+        while (!(SPI2->SR & TXE))
             ;
-
+        
         // Write data to register
-        SPI2->DR = address[i];
-        i++;
+        SPI2->DR = tx_buffer[i];
+
+        // Wait for RXNE to be set
+        while (!(SPI2->SR & RXNE))
+            ;
+        
+        // Read data from register
+        rx_buffer[i] = (SPI2->DR) & 0xFF;
+
+        ++i;
     }
 
-    // Wait until TXE is set
-    while (!(SPI2->SR & (1U << 1)))
-        ;
-
     // Wait for BUSY flag to reset
-    while ((SPI2->SR & (1U << 7)))
+    while ((SPI2->SR & BUSY))
         ;
-
-    // Clear OVR flag
+    
     // Drain the RX buffer of the junk byte clocked in during TX
     while (SPI2->SR & (1U << 0))
     {
         (void)SPI2->DR;
     }
+    // Clear OVR flag
     (void)SPI2->SR; // Clear OVR
-
-    return;
-}
-
-/**
- * @brief Receives messages on the SPI2 peripheral
- *
- * @param data Array for recieve data
- * @param size Size of array to recieve
- *
- * @return None
- */
-void receiveSPI2(uint8_t *data, uint32_t size)
-{
-    while (size)
-    {
-        // Wait until transmit buffer is empty
-        while (!(SPI2->SR & (1U << 1)))
-            ;
-
-        // Send dummy data
-        SPI2->DR = 0x00;
-
-        // Wait for RXNE FLAG to be set
-        while (!(SPI2->SR & (1U << 0)))
-            ;
-
-        // Read data from register
-        *data++ = (uint8_t)(SPI2->DR);
-        size--;
-    }
-
-    // Wait for BUSY flag to reset
-    while ((SPI2->SR & (1U << 7)))
-        ;
 
     return;
 }

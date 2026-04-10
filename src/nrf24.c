@@ -8,6 +8,8 @@
 
 #include "nrf24.h"
 
+static uint8_t MAX_BUFFER_SIZE = 33;
+
 uint8_t RX_ADDR_P0_BUFFER[ADDRESS_WIDTH] = {0x01, 0x02, 0x03, 0x04, 0x00};
 uint8_t RX_ADDR_P1_BUFFER[ADDRESS_WIDTH] = {0x06, 0x07, 0x08, 0x09, 0x0A};
 uint8_t RX_ADDR_P2_BUFFER[ADDRESS_WIDTH] = {0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
@@ -23,7 +25,7 @@ uint8_t RX_ADDR_P5_BUFFER[ADDRESS_WIDTH] = {0x1B, 0x1C, 0x1D, 0x1E, 0x1F};
  *
  * @return None
  */
-void writeRegisterSingle(uint8_t address, uint8_t value)
+static void writeRegisterSingle(uint8_t address, uint8_t value)
 {
     uint8_t tx_buffer[2] = {(W_REGISTER | address), value};
     uint8_t rx_buffer[2] = {0, 0};
@@ -49,7 +51,7 @@ void writeRegisterSingle(uint8_t address, uint8_t value)
  *
  * @return None
  */
-void writeRegisterMulti(uint8_t address, uint8_t *value, uint8_t length)
+static void writeRegisterMulti(uint8_t address, uint8_t *value, uint8_t length)
 {
     uint8_t tx_buffer[MAX_BUFFER_SIZE];
     uint8_t rx_buffer[MAX_BUFFER_SIZE];
@@ -82,7 +84,7 @@ void writeRegisterMulti(uint8_t address, uint8_t *value, uint8_t length)
  *
  * @return None
  */
-uint8_t readRegisterSingle(uint8_t address)
+static uint8_t readRegisterSingle(uint8_t address)
 {
     // Format message
     uint8_t tx_buffer[2] = {address, 0x00};
@@ -109,7 +111,7 @@ uint8_t readRegisterSingle(uint8_t address)
  *
  * @return None
  */
-void readRegisterMulti(uint8_t address, uint8_t *values, uint8_t length)
+static void readRegisterMulti(uint8_t address, uint8_t *values, uint8_t length)
 {
     uint8_t tx_buffer[MAX_BUFFER_SIZE];
     uint8_t rx_buffer[MAX_BUFFER_SIZE];
@@ -138,6 +140,56 @@ void readRegisterMulti(uint8_t address, uint8_t *values, uint8_t length)
         values[i] = rx_buffer[i + 1];
     }
 
+    return;
+}
+
+/**
+ * @brief Use the built-in command to flush the Rx buffer on the radio module
+ *
+ * @param None
+ *
+ * @return None
+ */
+void flushRx(void)
+{
+    uint8_t tx_buffer[2] = {FLUSH_RX, 0};
+    uint8_t rx_buffer[2] = {0, 0};
+
+    // Set CSN pin LOW
+    enableCSN_SPI3();
+
+    // Send write operation
+    transferSPI3(tx_buffer, rx_buffer, 2);
+
+    // Set CSN pin HIGH
+    disableCSN_SPI3();
+
+    delayMicrosecond(130);
+    return;
+}
+
+/**
+ * @brief Use the built-in command to flush the Tx buffer on the radio module
+ *
+ * @param None
+ *
+ * @return None
+ */
+void flushTx(void)
+{
+    uint8_t tx_buffer[2] = {FLUSH_TX, 0};
+    uint8_t rx_buffer[2] = {0, 0};
+
+    // Set CSN pin LOW
+    enableCSN_SPI3();
+
+    // Send write operation
+    transferSPI3(tx_buffer, rx_buffer, 2);
+
+    // Set CSN pin HIGH
+    disableCSN_SPI3();
+
+    delayMicrosecond(130);
     return;
 }
 
@@ -688,56 +740,6 @@ void readRadio(RadioPacket *packet, enum PIPE_PACKET_SIZE pps)
     // Cast data array into struct
     *packet = *(RadioPacket *)rx_buffer;
 
-    return;
-}
-
-/**
- * @brief Use the built-in command to flush the Rx buffer on the radio module
- *
- * @param None
- *
- * @return None
- */
-void flushRx(void)
-{
-    uint8_t tx_buffer[2] = {FLUSH_RX, 0};
-    uint8_t rx_buffer[2] = {0, 0};
-
-    // Set CSN pin LOW
-    enableCSN_SPI3();
-
-    // Send write operation
-    transferSPI3(tx_buffer, rx_buffer, 2);
-
-    // Set CSN pin HIGH
-    disableCSN_SPI3();
-
-    delayMicrosecond(130);
-    return;
-}
-
-/**
- * @brief Use the built-in command to flush the Tx buffer on the radio module
- *
- * @param None
- *
- * @return None
- */
-void flushTx(void)
-{
-    uint8_t tx_buffer[2] = {FLUSH_TX, 0};
-    uint8_t rx_buffer[2] = {0, 0};
-
-    // Set CSN pin LOW
-    enableCSN_SPI3();
-
-    // Send write operation
-    transferSPI3(tx_buffer, rx_buffer, 2);
-
-    // Set CSN pin HIGH
-    disableCSN_SPI3();
-
-    delayMicrosecond(130);
     return;
 }
 

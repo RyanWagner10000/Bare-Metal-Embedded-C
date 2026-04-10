@@ -117,9 +117,11 @@
 
 void initBerryIMU(void);
 uint8_t getWhoAmIxlgy(uint8_t imu_num);
-void logRawAccelData(uint8_t imu_num, int16_t *data);
 uint8_t statusGyro(uint8_t imu_num);
 uint8_t statusAccel(uint8_t imu_num);
 void getAccelData(uint8_t imu_num, int16_t *xyz);
+void getGyroData(uint8_t imu_num, int16_t *xyz);
+void logRawAccelData(uint8_t imu_num);
+void logRawGyroData(uint8_t imu_num);
 
 #endif // BERRYIMU_H

@@ -58,7 +58,6 @@
 // Constants for setting radio registers
 // Can be 3, 4, or 5 but needs to be consistant with the init function
 #define ADDRESS_WIDTH 5
-#define MAX_BUFFER_SIZE 33
 
 struct NRF24_STATUS_DATA
 {
@@ -92,15 +91,12 @@ enum PIPE_PACKET_SIZE
 
 uint8_t initRadio(uint8_t channel);
 void printRadioSettings(void);
-struct NRF24_STATUS_DATA statusRadio(void);
 uint8_t setTxMode(void);
 uint8_t setRxMode(void);
 void transmitRadio(uint8_t *data, uint8_t length);
 uint8_t dataAvailable(void);
 uint8_t txFIFOFull(void);
 void readRadio(RadioPacket *packet, enum PIPE_PACKET_SIZE pps);
-void flushRx(void);
-void flushTx(void);
 void printPacket(RadioPacket packet);
 
 #endif // NRF24_H

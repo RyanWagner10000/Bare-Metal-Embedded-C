@@ -97,6 +97,8 @@ void initModules(void)
 {
     // Enable IMU
     initBerryIMU();
+    usartWriteString("IMU1 Acc & Gyro ID: ");
+    usartWriteNumber((int32_t)getWhoAmIxlgy(IMU1));
     usartWriteString("\nIMU successfully initialized!\n");
 
     // Enable Radio
@@ -223,10 +225,6 @@ int main(void)
     // enum FILTER_STATE filter_state = IDLE;
     enum MOTOR_STATE motor_state = OFF;
 
-    uint8_t temp = getWhoAmIxlgy(IMU1);
-    usartWriteString("IMU1 Acc & Gyro ID: ");
-    usartWriteNumber((int32_t)temp);
-
     while (1)
     {
         // Handle radio Tx/Rx
@@ -300,6 +298,10 @@ int main(void)
         {
             // Reset flag
             setImuFlag(0);
+
+            // Read data from IMU
+            // logRawAccelData(IMU1);
+            logRawGyroData(IMU1);
         }
 
         if (getPWMFlag())

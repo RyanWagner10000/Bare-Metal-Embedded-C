@@ -96,79 +96,39 @@ void initSPI1(void)
     return;
 }
 
-/**
- * @brief Transmit messages on the SPI1 peripheral
- *
- * @param address Array of addresses to transmit
- * @param size Size of array messages to transmit
- *
- * @return None
- */
-void transmitSPI1(uint8_t *address, uint32_t size)
+void transferSPI1(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
 {
-    uint32_t i = 0;
-
-    while (i < size)
+    uint8_t i = 0;
+    while (i < length)
     {
         // Wait until TXE is set
-        while (!(SPI1->SR & (1U << 1)))
+        while (!(SPI1->SR & TXE))
             ;
-
+        
         // Write data to register
-        SPI1->DR = address[i];
-        i++;
+        SPI1->DR = tx_buffer[i];
+
+        // Wait for RXNE to be set
+        while (!(SPI1->SR & RXNE))
+            ;
+        
+        // Read data from register
+        rx_buffer[i] = (SPI1->DR) & 0xFF;
+
+        ++i;
     }
 
-    // Wait until TXE is set
-    while (!(SPI1->SR & (1U << 1)))
-        ;
-
     // Wait for BUSY flag to reset
-    while ((SPI1->SR & (1U << 7)))
+    while ((SPI1->SR & BUSY))
         ;
-
-    // Clear OVR flag
+    
     // Drain the RX buffer of the junk byte clocked in during TX
     while (SPI1->SR & (1U << 0))
     {
         (void)SPI1->DR;
     }
+    // Clear OVR flag
     (void)SPI1->SR; // Clear OVR
-
-    return;
-}
-
-/**
- * @brief Receives messages on the SPI1 peripheral
- *
- * @param data Array for recieve data
- * @param size Size of array to recieve
- *
- * @return None
- */
-void receiveSPI1(uint8_t *data, uint32_t size)
-{
-    while (size)
-    {
-        // Wait until transmit buffer is empty
-        while (!(SPI1->SR & (1U << 1)))
-            ;
-
-        // Send dummy data
-        SPI1->DR = 0x00;
-
-        // Wait for RXNE FLAG to be set
-        while (!(SPI1->SR & (1U << 0)))
-            ;
-
-        // Read data from register
-        *data++ = (uint8_t)(SPI1->DR);
-        size--;
-    }
-
-    // Wait for BUSY flag to reset
-    while ((SPI1->SR & (1U << 7)))
-        ;
 
     return;
 }

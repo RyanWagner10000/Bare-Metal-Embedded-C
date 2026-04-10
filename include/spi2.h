@@ -12,11 +12,13 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
-#include "printing.h"
 
 #define SPI2_BASE 0x40003800
 #define SPI2_EN (1U << 14)
 #define SPI2_CS (1U << 12)
+#define TXE (1U << 1)
+#define RXNE (1U << 0)
+#define BUSY (1U << 7)
 
 #define SPI2 ((SPI2_TypeDef *)(SPI2_BASE))
 
@@ -34,8 +36,7 @@ typedef struct
 } SPI2_TypeDef;
 
 void initSPI2(void);
-void transmitSPI2(uint8_t *address, uint32_t size);
-void receiveSPI2(uint8_t *data, uint32_t size);
+void transferSPI2(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length);
 void enableCS_SPI2(void);
 void disableCS_SPI2(void);
 
