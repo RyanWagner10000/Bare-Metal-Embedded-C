@@ -172,15 +172,15 @@
 #define INT_THS_L (0x32)
 #define INT_THS_H (0x33)
 
-void initBerryIMU(void);
+uint8_t initBerryIMU(void);
 uint8_t getWhoAmIxlgy(uint8_t imu_num);
-uint8_t getWhoAmIMag(uint8_t imu_num);
+// uint8_t getWhoAmIMag(uint8_t imu_num);
 uint8_t statusGyro(uint8_t imu_num);
 uint8_t statusAccel(uint8_t imu_num);
 void getAccelData(uint8_t imu_num, int16_t *xyz);
 void getGyroData(uint8_t imu_num, int16_t *xyz);
 void logRawAccelData(uint8_t imu_num);
 void logRawGyroData(uint8_t imu_num);
-void logRawMagData(uint8_t imu_num);
+// void logRawMagData(uint8_t imu_num);
 
 #endif // BERRYIMU_H

@@ -8,7 +8,9 @@
 
 #include "main.h"
 
+#define RAD (0.017453293)
 uint8_t packets_received = 0;
+Euler angles = {0, 0, 0};
 
 /**
  * @brief Flash all LEDs
@@ -47,28 +49,34 @@ void flashAllLED(uint32_t delay)
  */
 void initPeripherals(void)
 {
+    // Enable USART for testing
+    initUSART2();
+    usartWriteString("Testing USART Connection!\n");
+
     // Enable Floating Point Unit
     enableFaults();
     enableFPU();
+    usartWriteString("FPU sucessfully initializaed!\n");
 
     // Enable all the LED's
     initGreenLED();
     initOrangeLED();
     initRedLED();
     initBlueLED();
+    usartWriteString("LED's sucessfully initializaed!\n");
 
     // Enable all the timers
     initTimer2();
+    usartWriteString("Timer2 sucessfully initializaed!\n");
     initTimer5();
+    usartWriteString("Timer5 sucessfully initializaed!\n");
     initTimer6();
+    usartWriteString("Timer6 sucessfully initializaed!\n");
     initTimer8();
+    usartWriteString("Timer8 sucessfully initializaed!\n");
 
     // Enable the push button on the board
-    initPushButton();
-
-    // Enable USART for testing
-    initUSART2();
-    usartWriteString("Testing USART Connection!\n");
+    // initPushButton();
 
     // Enable SPI buses for IMU and Radio
     initSPI1();
@@ -96,15 +104,31 @@ void initPeripherals(void)
 void initModules(void)
 {
     // Enable IMU
-    initBerryIMU();
-    usartWriteString("IMU1 Acc & Gyro ID: ");
-    usartWriteNumber((int32_t)getWhoAmIxlgy(IMU1));
-    usartWriteChar('\n');
-    // usartWriteString("IMU1 Mag ID: ");
-    // usartWriteNumber((int32_t)getWhoAmIMag(IMU1));
-    // usartWriteChar('\n');
-    usartWriteString("\nIMU successfully initialized!\n");
-
+    if (initBerryIMU())
+    {
+        if (getWhoAmIxlgy(IMU1) == 0x6A)
+        {
+            usartWriteString("\nIMU successfully initialized and communicating!\n");
+        }
+        else
+        {
+            usartWriteString("IMU ID not recognized.\n");
+            usartWriteNumber((int32_t)getWhoAmIxlgy(IMU1));
+            usartWriteChar('\n');
+            while (1)
+            {
+                flashAllLED(FLASH_FAIL);
+            }
+        }
+    }
+    else
+    {
+        usartWriteString("IMU initialization unsuccessful.\n");
+        while (1)
+        {
+            flashAllLED(FLASH_FAIL);
+        }
+    }
 
     // Enable Radio
     if (initRadio(RX_P0_CHANNEL))
@@ -199,6 +223,31 @@ void logPacketDrop(void)
     return;
 }
 
+void updateOrientation(int16_t *accel_data, int16_t *gyro_data)
+{
+    // Convert gyro values to rad/s
+    float gx = gyro_data[0] * 0.0175f * RAD;
+    float gy = gyro_data[1] * 0.0175f * RAD;
+    float gz = gyro_data[2] * 0.0175f * RAD;
+
+    MadgwickAHRSupdateIMU(gx, gy, gz, (float)accel_data[0], (float)accel_data[1], (float)accel_data[2]);
+
+    Quaterntion temp_q = getQuaternion();
+    quaternionToEuler(temp_q, &angles);
+
+    usartWriteString("Roll ");
+    usartWriteNumber((int32_t)angles.x);
+    usartWriteString(" | ");
+    usartWriteString("Pitch ");
+    usartWriteNumber((int32_t)angles.y);
+    usartWriteString(" | ");
+    usartWriteString("Yaw ");
+    usartWriteNumber((int32_t)angles.z);
+    usartWriteChar('\n');
+
+    return;
+}
+
 /**
  * @brief Main forever while-loop
  *
@@ -223,6 +272,10 @@ int main(void)
     RadioPacket packet = {0, 0, 0, 0, 0, 0, 255, 0};
     DutyCycles duty_cycles = {0, 0, 0, 0};
     uint8_t txrx = 1; // 0 for tx, 1 for rx
+
+    // IMU data structures
+    int16_t accel_data[3] = {0, 0, 0};
+    int16_t gyro_data[3] = {0, 0, 0};
 
     // State initializations
     // enum IMU_STATE imu_state = IDLE;
@@ -304,10 +357,16 @@ int main(void)
             // Reset flag
             setImuFlag(0);
 
+            // Get IMU data
+            getAccelData(IMU1, accel_data);
+            getGyroData(IMU1, gyro_data);
+
+            // Update quaternion estimation
+            updateOrientation(accel_data, gyro_data);
+
             // Read data from IMU
             // logRawAccelData(IMU1);
             // logRawGyroData(IMU1);
-            // logRawMagData(IMU1);
         }
 
         if (getPWMFlag())

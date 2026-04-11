@@ -53,56 +53,6 @@ static void writeRegisterSingle(uint8_t imu_num, uint8_t address, uint8_t value)
 }
 
 /**
- * @brief Internal function to write N-many bytes to specific register on the imu module
- *
- * @param imu_num IMU number (typically 1 or 2)
- * @param address Register address on imu module
- * @param value Value array to set register on the module
- * @param length Length of value array
- *
- * @return None
- */
-// static void writeRegisterMulti(uint8_t imu_num, uint8_t address, uint8_t *value, uint8_t length)
-// {
-//     uint8_t tx_buffer[MAX_BUFFER_SIZE];
-//     uint8_t rx_buffer[MAX_BUFFER_SIZE];
-
-//     length = length <= MAX_BUFFER_SIZE ? length : MAX_BUFFER_SIZE;
-
-//     // Copy data into Tx buffer
-//     tx_buffer[0] = address;
-//     for (uint8_t i = 1; i < length + 1; i++)
-//     {
-//         tx_buffer[i] = value[i - 1];
-//     }
-
-//     if (imu_num == IMU1)
-//     {
-//         // Set CS pin LOW
-//         enableCS_SPI1();
-
-//         // Send write operation
-//         transferSPI1(tx_buffer, rx_buffer, length + 1);
-
-//         // Set CE pin HIGH
-//         disableCS_SPI1();
-//     }
-//     else if (imu_num == IMU2)
-//     {
-//         // Set CS pin LOW
-//         enableCS_SPI2();
-
-//         // Send write operation
-//         transferSPI2(tx_buffer, rx_buffer, length + 1);
-
-//         // Set CE pin HIGH
-//         disableCS_SPI2();
-//     }
-
-//     return;
-// }
-
-/**
  * @brief Internal function to read byte of specific register on the imu module
  *
  * @param imu_num IMU number (typically 1 or 2)
@@ -205,21 +155,43 @@ static void readRegisterMulti(uint8_t imu_num, uint8_t address, uint8_t *values,
  *
  * @return None
  */
-void initAccelerometer(void)
+uint8_t initAccelerometer(void)
 {
+    uint8_t success = 1;
+    uint8_t test = 0;
+
+    uint8_t ctrl1_xl = 0x9B;
+    uint8_t ctrl8_xl = 0xC8;
+    uint8_t ctrl3_c = 0x44;
+
     // Accelerometer ODR 3.3 kHz = 0b10011011
-    writeRegisterSingle(IMU1, CTRL1_XL, 0x9B);
+    writeRegisterSingle(IMU1, CTRL1_XL, ctrl1_xl);
     // writeRegisterSingle(IMU2, CTRL1_XL, 0x9B);
+    test = readRegisterSingle(IMU1, CTRL1_XL);
+    if (test != ctrl1_xl)
+    {
+        success = 0;
+    }
 
     // Accelerometer Low & high pass filter, ODR/9 = 0b11001000
-    writeRegisterSingle(IMU1, CTRL8_XL, 0xC8);
+    writeRegisterSingle(IMU1, CTRL8_XL, ctrl8_xl);
     // writeRegisterSingle(IMU2, CTRL8_XL, 0xC8);
+    test = readRegisterSingle(IMU1, CTRL8_XL);
+    if (test != ctrl8_xl)
+    {
+        success = 0;
+    }
 
     // Accelerometer Block Data update, incrememnt during multi-byte read
-    writeRegisterSingle(IMU1, CTRL3_C, 0x44);
+    writeRegisterSingle(IMU1, CTRL3_C, ctrl3_c);
     // writeRegisterSingle(IMU2, CTRL3_C, 0x44);
+    test = readRegisterSingle(IMU1, CTRL3_C);
+    if (test != ctrl3_c)
+    {
+        success = 0;
+    }
 
-    return;
+    return success;
 }
 
 /**
@@ -229,17 +201,34 @@ void initAccelerometer(void)
  *
  * @return None
  */
-void initGyroscope(void)
+uint8_t initGyroscope(void)
 {
+    uint8_t success = 1;
+    uint8_t test = 0;
+
+    uint8_t ctrl2_g = 0x94;
+    uint8_t ctrl7_g = 0x70;
+
     // Gyro ODR 3.3 kHz and 500 dps = 0b10010100
-    writeRegisterSingle(IMU1, CTRL2_G, 0x94);
+    writeRegisterSingle(IMU1, CTRL2_G, ctrl2_g);
     // writeRegisterSingle(IMU2, CTRL2_G, 0x94);
+    test = readRegisterSingle(IMU1, CTRL2_G);
+    if (test != ctrl2_g)
+    {
+        success = 0;
+    }
+    
 
     // Gyroscopes high pass filter BW: 925 Hz
-    writeRegisterSingle(IMU1, CTRL7_G, 0x70);
+    writeRegisterSingle(IMU1, CTRL7_G, ctrl7_g);
     // writeRegisterSingle(IMU2, CTRL7_G, 0x70);
+    test = readRegisterSingle(IMU1, CTRL7_G);
+    if (test != ctrl7_g)
+    {
+        success = 0;
+    }
 
-    return;
+    return success;
 }
 
 /**
@@ -389,33 +378,61 @@ uint8_t statusAccel(uint8_t imu_num)
  *
  * @return None
  */
-void initBerryIMU(void)
+uint8_t initBerryIMU(void)
 {
     // Alternate IMU1 and IMU2 commands to initialize everything
-    // initAccelerometer();
+    uint8_t success = 1;
+    uint8_t test = 0;
 
-    // initGyroscope();
+    uint8_t fifo_ctrl5 = 0x44;
+    uint8_t ctrl4_c = 0x02;
+    uint8_t ctrl5_c = 0xE0;
+    uint8_t ctrl6_c = 0x03;
+
+    success = initAccelerometer();
+
+    success = initGyroscope();
 
     // initMagnetometer();
 
     // Set the mode to Continuous
     // Set FIFO ODR to 1.66 kHz
-    // writeRegisterSingle(IMU1, FIFO_CTRL5, 0x44);
+    writeRegisterSingle(IMU1, FIFO_CTRL5, fifo_ctrl5);
     // writeRegisterSingle(IMU2, FIFO_CTRL5, 0x44);
+    test = readRegisterSingle(IMU1, FIFO_CTRL5);
+    if (test != fifo_ctrl5)
+    {
+        success = 0;
+    }
 
     // // Enable gyroscope digital LPF = 0b00000010
-    // writeRegisterSingle(IMU1, CTRL4_C, 0x02);
+    writeRegisterSingle(IMU1, CTRL4_C, ctrl4_c);
     // writeRegisterSingle(IMU2, CTRL4_C, 0x02);
+    test = readRegisterSingle(IMU1, CTRL4_C);
+    if (test != ctrl4_c)
+    {
+        success = 0;
+    }
 
     // // Enable circular burst-mode: Gyroscope + accelerometer + mag registers
-    // writeRegisterSingle(IMU1, CTRL5_C, 0xE0);
+    writeRegisterSingle(IMU1, CTRL5_C, ctrl5_c);
     // writeRegisterSingle(IMU2, CTRL5_C, 0xE0);
+    test = readRegisterSingle(IMU1, CTRL5_C);
+    if (test != ctrl5_c)
+    {
+        success = 0;
+    }
 
     // // Gyroscopes low pass filter BW: 925 Hz
-    // writeRegisterSingle(IMU1, CTRL6_C, 0x03);
+    writeRegisterSingle(IMU1, CTRL6_C, ctrl6_c);
     // writeRegisterSingle(IMU2, CTRL6_C, 0x03);
+    test = readRegisterSingle(IMU1, CTRL6_C);
+    if (test != ctrl6_c)
+    {
+        success = 0;
+    }
 
-    return;
+    return success;
 }
 
 /**
