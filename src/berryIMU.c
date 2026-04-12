@@ -219,7 +219,7 @@ uint8_t initGyroscope(void)
     }
     
 
-    // Gyroscopes high pass filter BW: 925 Hz
+    // Gyroscopes high pass filter and 1.04Hz cutoff
     writeRegisterSingle(IMU1, CTRL7_G, ctrl7_g);
     // writeRegisterSingle(IMU2, CTRL7_G, 0x70);
     test = readRegisterSingle(IMU1, CTRL7_G);
