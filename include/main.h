@@ -19,6 +19,7 @@
 #include "fpu.h"
 #include "timer6.h"
 #include "nrf24.h"
+#include "MadgwickAHRS.h"
 
 // RF Channel for the Radio
 #define RX_P0_CHANNEL 0
@@ -29,11 +30,11 @@
 
 // Maximum motor/control values
 #define MAX_THROTTLE 90 // Out of 100
-#define MIN_THROTTLE 0  // Out of 100
-#define MIN_ROLL -10    // Degrees
-#define MAX_ROLL 10     // Degrees
-#define MIN_PITCH -10   // Degrees
-#define MAX_PITCH 10    // Degrees
+#define MIN_THROTTLE 10  // Out of 100
+#define MIN_ROLL -20    // Degrees
+#define MAX_ROLL 20     // Degrees
+#define MIN_PITCH -20   // Degrees
+#define MAX_PITCH 20    // Degrees
 #define MIN_YAW 0       // Degrees/sec
 #define MAX_YAW 5       // Degrees/sec
 #define MIN_INT16 -32768
@@ -41,8 +42,8 @@
 
 // Roll, Pitch, and Yaw gains for mixer
 #define PITCH_GAIN 0.3f
-#define ROLL_GAIN  0.3f
-#define YAW_GAIN   0.15f
+#define ROLL_GAIN 0.3f
+#define YAW_GAIN 0.15f
 
 enum CONTROLLER_BUTTON
 {
@@ -58,30 +59,27 @@ enum CONTROLLER_BUTTON
 
 typedef struct
 {
+    float Kp;
+    float Ki;
+    float Kd;
+    float error;
+    float prev_error;
+    float I;
+} PID_Controller;
+
+typedef struct
+{
     uint8_t duty1;
     uint8_t duty2;
     uint8_t duty3;
     uint8_t duty4;
 } DutyCycles;
 
-// enum IMU_STATE
-// {
-//     IDLE,
-//     RECEIVING,
-//     CALCULATING
-// };
-
 enum RADIO_STATE
 {
     TRANSMIT,
     RECEIVE
 };
-
-// enum FILTER_STATE
-// {
-//     IDLE,
-//     UPDATING
-// };
 
 enum MOTOR_STATE
 {

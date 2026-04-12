@@ -18,8 +18,10 @@
 #define IMU1 (1) // Back IMU in SPI1
 #define IMU2 (2) // Forward IMU in SPI2
 #define READ_OPERATION (0x80)
+#define MAG_ADDRESS (0x1C)
+// #define MAG_ADDRESS (0x1E)
 
-// Register definitions
+// LISM6DSL Register definitions
 #define FUNC_CFG_ACCESS (0x01)
 #define SENSOR_SYNC_TIME_FRAME (0x04)
 #define SENSOR_SYNC_RES_RATIO (0x05)
@@ -115,11 +117,70 @@
 #define Y_OFS_USR (0x74)
 #define Z_OFS_USR (0x75)
 
-void initBerryIMU(void);
+// LISM6DSL Bank A Registers
+#define SLV0_ADD (0x02)
+#define SLV0_SUBADD (0x03)
+#define SLAVE0_CONFIG (0x04)
+#define SLV1_ADD (0x05)
+#define SLV1_SUBADD (0x06)
+#define SLAVE1_CONFIG (0x07)
+#define SLV2_ADD (0x08)
+#define SLV2_SUBADD (0x09)
+#define SLAVE2_CONFIG (0x0A)
+#define SLV3_ADD (0x0B)
+#define SLV3_SUBADD (0x0C)
+#define SLAVE3_CONFIG (0x0D)
+#define DATAWRITE_SRC_MODE_SUB_SLV0 (0x0E)
+#define CONFIG_PEDO_THS_MIN (0x0F)
+#define SM_THS (0x13)
+#define PEDO_DEB_REG (0x14)
+#define STEP_COUNT_DELTA (0x15)
+#define MAG_SI_XX (0x24)
+#define MAG_SI_XY (0x25)
+#define MAG_SI_XZ (0x26)
+#define MAG_SI_YX (0x27)
+#define MAG_SI_YY (0x28)
+#define MAG_SI_YZ (0x29)
+#define MAG_SI_ZX (0x2A)
+#define MAG_SI_ZY (0x2B)
+#define MAG_SI_ZZ (0x2C)
+#define MAG_OFFX_L (0x2D)
+#define MAG_OFFX_H (0x2E)
+#define MAG_OFFY_L (0x2F)
+#define MAG_OFFY_H (0x30)
+#define MAG_OFFZ_L (0x31)
+#define MAG_OFFZ_H (0x32)
+
+// LIS3DL Register definitions
+#define WHO_AM_I_MAG (0x0F)
+#define CTRL_REG1 (0x20)
+#define CTRL_REG2 (0x21)
+#define CTRL_REG3 (0x22)
+#define CTRL_REG4 (0x23)
+#define CTRL_REG5 (0x24)
+#define STATUS_REG_MAG (0x27)
+#define OUT_X_L (0x28)
+#define OUT_X_H (0x29)
+#define OUT_Y_L (0x2A)
+#define OUT_Y_H (0x2B)
+#define OUT_Z_L (0x2C)
+#define OUT_Z_H (0x2D)
+#define TEMP_OUT_L (0x2E)
+#define TEMP_OUT_H (0x2F)
+#define INT_CFG (0x30)
+#define INT_SRC (0x31)
+#define INT_THS_L (0x32)
+#define INT_THS_H (0x33)
+
+uint8_t initBerryIMU(void);
 uint8_t getWhoAmIxlgy(uint8_t imu_num);
-void logRawAccelData(uint8_t imu_num, int16_t *data);
+// uint8_t getWhoAmIMag(uint8_t imu_num);
 uint8_t statusGyro(uint8_t imu_num);
 uint8_t statusAccel(uint8_t imu_num);
 void getAccelData(uint8_t imu_num, int16_t *xyz);
+void getGyroData(uint8_t imu_num, int16_t *xyz);
+void logRawAccelData(uint8_t imu_num);
+void logRawGyroData(uint8_t imu_num);
+// void logRawMagData(uint8_t imu_num);
 
 #endif // BERRYIMU_H

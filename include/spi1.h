@@ -12,13 +12,13 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
-#include "printing.h"
 
 #define SPI1_BASE 0x40013000
 #define SPI1_EN (1U << 12)
 #define SPI1_CS (1U << 7)
 #define TXE (1U << 1)
 #define RXNE (1U << 0)
+#define BUSY (1U << 7)
 
 #define SPI1 ((SPI1_TypeDef *)(SPI1_BASE))
 
@@ -36,8 +36,7 @@ typedef struct
 } SPI1_TypeDef;
 
 void initSPI1(void);
-void transmitSPI1(uint8_t *address, uint32_t size);
-void receiveSPI1(uint8_t *data, uint32_t size);
+void transferSPI1(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length);
 void enableCS_SPI1(void);
 void disableCS_SPI1(void);
 

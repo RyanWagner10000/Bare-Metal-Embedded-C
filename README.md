@@ -1,6 +1,13 @@
-# Bare-Metal-Embedded-C
+# Bare-Metal Embedded-C Drone & Flight Controller
 
-Picture coming soon when it doesn't look like a rat's nest of wires :)
+<!-- ![Drone](/resources/images/drone.jpg "My flying rats nest") -->
+<figure>
+    <img src="resources/images/drone.jpg"
+         alt="My flying rats nest"
+         width="600"
+         height="500">
+    <figcaption>It may be a rats nest of wires, but it's MY rats nest of wires.</figcaption>
+</figure>
 
 ## Table of Contents
 
@@ -9,15 +16,15 @@ Picture coming soon when it doesn't look like a rat's nest of wires :)
 - [Flashing](#flashing-the-board)
 - [Used Components](#external-components)
 - [Peripheral Settings](#current-peripheral-settings)
-- [Filter Methods](#complimentary-filter)
+- [Filter Methods](#madgwick-filter)
 
 <br>
 
 ## Description
 
-This repo is mainly for practicing bare-metal embedded C programming on the STM32F407G-DISC1 board and following the book: Bare-Metal Embedded C Programming by Israel Gbati
+This repo is mainly for practicing bare-metal embedded C programming on the STM32F407G-DISC1 board and following the book: Bare-Metal Embedded C Programming by Israel Gbati.
 
-The goal is to make a drone, but if that doesn't happen it's okay. I'm just trying to learn as much as I can. Along that note, this repo does not use any CMSIS files or HAL libraries from STM; I figured doing so would help me learn more about how everything works even it's not the most performant.
+I'm just trying to learn as much as I can. Along that note, this repo does not use any CMSIS files or HAL libraries from STM; I figured doing so would help me learn more about how everything works even it's not the most performant.
 
 <br>
 
@@ -31,8 +38,14 @@ The goal is to make a drone, but if that doesn't happen it's okay. I'm just tryi
 
 ## Flashing the Board
 1. cd into the root folder of this project
-2. Run the build.sh bash script to build the whole project
-3. Run the flash.sh bash script to flash the compiled ELF file to the board. Make sure the board is plugged in to flash
+2. Run the build.sh bash script to build the whole project.
+    
+    `./make.sh`
+
+3. Run the flash.sh bash script to flash the compiled ELF file to the board. Make sure the board is plugged in to flash.
+
+    `./flash.sh`
+
 4. If you want to read the USART output from the device
    1. Make sure the USART-to-USB board is wired and plugged in
    2. Launch a serial USB port reading application in another terminal
@@ -66,19 +79,23 @@ This board is an Inertial Measurement Unit (IMU) which incorporates an accelerom
 
 ###### Accelerometer (LSM6DSL)
 
-Coming soon!
+The accelerometer is configured to have an Ouput Data Rate (ODR) of 3.3kHz with low and high pass filters of ODR/9. It's only on $\pm 4g$ sensitivity as I don't expect my applicaiton to be going very fast. Lastly, I set the Block Data Update bit for control register 3 which blocks continuous updates until the MSB and LSB have been read.
+
+Note: are these the best settings? No, but they work fine for right now.
 
 ###### Gyroscope (LSM6DSL)
 
-Coming soon!
+The gyroscope is configured to also have an ODR of 3.3kHz with it's sensitvity at 500 dps (degrees per second). Again, this drone probably isn't moving very fast so high sensitivity would only lead to more noise in the system. This sensor is also configured to have a high and low pass filter.
+
+Note: are these the best settings? No, but they work fine for right now.
 
 ###### Magnetometer (LIS3MDL)
 
-Coming soon!
+This sensor was not used at the time of writing, because frankly I couldn't get the master I2C to work on LSM6DSL to talk to the LIS3MDL (magnetometer) sensor via SPI. Hopeuflly this gets figured out eventually!
 
-###### Pressure (BM388)
+###### Pressure (BMP388)
 
-Coming soon!
+This sensor was not used at the time of writing, because frankly I couldn't get the master I2C to work on LSM6DSL to talk to the BMP388 (barometer) sensor via SPI. Hopeuflly this gets figured out eventually!
 
 ---
 
@@ -141,17 +158,21 @@ This board does as the name suggests: it distributes the power to all the connec
 
 #### TIM2
 
-This timer is used as the update frequency for the 9-DOF IMU and the complimentary filter.
+This timer is used as the update frequency for the IMU, Madgwick filter, updating the PWM's for all the motors. It was set at 250Hz which seemed like a fine rate to be accurately checking the IMU, calculating quaternions, and updating motor speeds.
 
-It also has an interrupt triggered on its overflow such that it sets a global flag indicating to the Main loop that the sensor data is ready to be read and used in the complimentary filter.
+It also has an interrupt triggered on its overflow such that it sets a global flag indicating to the Main loop that everything is ready to read and updated. This interrupt also triggers another 1 second flag that was only for debugging purposes like received packets per second and other update rates.
 
 #### TIM5
 
 This timer is used as general 1ms timer for waiting/sleeping purposes. Mainly used when initializing things.
 
+#### TIM6
+
+This timer is used as general 1us (microsecond) timer for waiting/sleeping purposes. Mainly used when transmitting messages on the NRF24L01 transceiver.
+
 #### TIM8
 
-This timer is used for the PWM output for the ESC's/motors. It uses it's 4 channels on pins PC6, PC7, PC8, PC9 to change the PWM for each motor simultaneously. This timer updates at a rate of 400 Hz for faster throttle changes/response.
+This timer is used for the PWM output for the ESC's/motors. It uses it's 4 channels on pins PC6, PC7, PC8, PC9 to change the PWM for each motor simultaneously. This timer updates at a rate of 400 Hz for faster throttle changes/response. The fastest this timer may go is 500Hz as the schema to control the ESC's/motors does not allow a period faster than that.
 
 ### LED's
 
@@ -168,7 +189,7 @@ All of these LED's are initialized and are typically used to show success/failur
 
 #### USART2
 
-This peripheral uses GPIO pins PD5 & PD6 in alternate function mode to enable basic USART communication to my development machine. I have configured the protocol to operate at 115200 baud, but may change in the future depending on frequency of messaging; this peripheral will be toggled off in the final deployment of the code as a computer will not be connected to it at all times. Therefore, USART is mainly used for debugging.
+This peripheral uses GPIO pins PA2 & PA3 in alternate function mode to enable basic USART communication to my development machine. I have configured the protocol to operate at 115200 baud, but may change in the future depending on frequency of messaging; this peripheral will be toggled off in the final deployment of the code as a computer will not be connected to it at all times. Therefore, USART is mainly used for debugging.
 
 ### SPI
 
@@ -176,27 +197,19 @@ This peripheral uses GPIO pins PD5 & PD6 in alternate function mode to enable ba
 
 These peripherals uses GPIO pins PB3, PB4, PB5, and PB7 for SPI1 and PB12, PB13, PB14, and PB15 for SPI2. These busses are used to communicate to both IMU modules. If other devices need to communicate via SPI1 (and at the same frequency), then they will share the SDO (MISO), SDI (MOSI), and SCL (SCK) pins as the IMU module, but will need another GPIO pin for the CS of the new device. SPI1 & SPI2 is setup to operate at 1MHz, reduced from the 16MHz bus frequency; this was done to limit extra noise on the sensor.
 
-
 #### SPI3
 
-This peripheral uses GPIO pins PC10, PC11, PC12, PD1, and PD2. This bus is used to communicate to the RF module (NRF24L01+); pins PD1 and PD2 are setup to be the CE and CSN pins which are used to turn the radio ON/OFF for use as well as for following the SPI communication protocol. SPI3 is setup to operate at 1MHz, reduced from the 16MHz bus frequency; this was done to limit extra noise on the sensor.
+This peripheral uses GPIO pins PC10, PC11, PC12, PD3, and PD4. This bus is used to communicate to the RF module (NRF24L01+); pins PD3 and PD4 are setup to be the CE and CSN pins which are used to turn the radio ON/OFF for use as well as for following the SPI communication protocol. SPI3 is setup to operate at 1MHz, reduced from the 16MHz bus frequency; this was done to limit extra noise on the sensor.
 
-## Complimentary Filter
+## Madgwick Filter
 
-The complimentary filter currently implemented uses the scaled values of the accelerometer and gyroscope (with static bias setting) to obtain a rough estimate of the orientation of the module in 3D space. The settings configured in the code shows a very smooth transition towards the roll/pitch the device is at. Therefore, this is **not** meant to be used on any fast moving drone at the moment. The current plan is to hone this complimentary filter to make it a little more responsive, and then transition to a Mahony or Madgwick filter and include the sensor temperature and gyroscope into the sensor fusion.
+This was NOT an original idea, and I encourage anyone to read into it further as I probably will not be able to fully articulate the ability of this filter and orientation estimator. High-level, the Madgwick filter is a process that uses quaternions to represent the orienation of something in 3D space. I also can't give a great explanation of quaternions here, but essentailly they are 4D vectors with one real part and three imaginary parts; this allows quaternions to efficiently be converted to Euler angles (or any other schema) but without the problem of gimbal lock.
 
-The complimentary filter operate as follows:
+Anyway, the Madgwcik filter uses quaternions and fast gradient-descent to find the orientation of the object through all the sensor noise and drift associated with gyroscopes. There are two versions of the Madgwick filter, one that just uses Accelerometer and Gyroscope sensors, and one that is MARG (Magnetic, Angular Rate, and Gravity). The filter boasts great resolution even at update speeds of 10Hz as well as computational efficiency for applicaitons with limited resources (like this one!).
 
-1. Get the raw XYZ values of the gyroscope
-2. Scale the gyro readings based on the configuration of that sensor
-3. Get the raw XYZ values of the accelerometer
-4. Scale the accelerometer values based on the configuration of that sensor
-5. Calculate the change in gyro x angular velocity using the update frequency
-    1. Do so for the gyro y angular velocity too
-6. Add the delta in x (roll) and y (pitch) to the global roll and pitch variables
-7. Calculate the roll and pitch with the accelerometer values
-8. Calculate the final roll and pitch angles by combining the gyro and accelerometer roll and pitchs values.
-    1. A constant alpha of 0.9 biases towards using the gyro values and the inverse (0.1) towards the accelerometer values
+I'm not going to try explaining the math behind this great filter, so I implore you to read it yourself. There are many other implementations of this filter online/github, but I went with the following site because everything was open-source!
+
+| [Paper Link](https://x-io.co.uk/downloads/madgwick_internal_report.pdf) |  [Code Link](https://x-io.co.uk/open-source-imu-and-ahrs-algorithms/) |
 
 <br>
 
