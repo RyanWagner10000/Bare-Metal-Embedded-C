@@ -12,11 +12,13 @@
 #define dt (0.004f) // 250 Hz dt in seconds
 uint8_t packets_received = 0;
 Euler angles = {0.0f, 0.0f, 0.0f};
-PID_Controller roll_pid = {2.0f, 0.2f, 0.0f, 0.0f, 0.0f, 0};
+PID_Controller roll_pid = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0};
 
-PID_Controller pitch_pid = {2.0f, 0.2f, 0.0f, 0.0f, 0.0f, 0};
+PID_Controller pitch_pid = {3.0f, 0.01f, 0.001f, 0.0f, 0.0f, 0};
 
 PID_Controller yaw_pid = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0};
+
+uint8_t MIN_THROTTLE = 40;
 
 /**
  * @brief Flash all LEDs
@@ -87,8 +89,8 @@ void initPeripherals(void)
     // Enable SPI buses for IMU and Radio
     initSPI1();
     usartWriteString("SPI1 successfully initialized!\n");
-    // initSPI2();
-    // usartWriteString("SPI2 successfully initialized!\n");
+    initSPI2();
+    usartWriteString("SPI2 successfully initialized!\n");
     initSPI3();
     usartWriteString("SPI3 successfully initialized!\n");
 
@@ -110,17 +112,18 @@ void initPeripherals(void)
 void initModules(void)
 {
     // Enable IMU
-    if (initBerryIMU())
+    if (initIMU(IMU2))
     {
-        if (getWhoAmIxlgy(IMU1) == 0x6A)
+        uint8_t temp_id = getAccelGyroID(IMU2);
+        if (temp_id == XL_GYRO_ADDRESS)
         {
             usartWriteString("\nIMU successfully initialized and communicating!\n");
         }
         else
         {
-            usartWriteString("IMU ID not recognized.\n");
-            usartWriteNumber((int32_t)getWhoAmIxlgy(IMU1));
-            usartWriteChar('\n');
+            usartWriteString("IMU ID [");
+            usartWriteNumber((uint32_t)temp_id);
+            usartWriteString("] not recognized.\n");
             while (1)
             {
                 flashAllLED(FLASH_FAIL);
@@ -207,7 +210,7 @@ void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
     // Normalize values: throttle [0, 1], roll, pitch, yaw [-1, 1]
     // float norm_throttle = ((float)packet.throttle - (float)MIN_INT16) / 65535.0f; // [0, 1]
     float norm_throttle = ((float)packet.throttle) / MAX_INT16;               // [0, 1]
-    float norm_pitch = ((float)(packet.pitch - MIN_INT16) / (32767.5)) - 1.0; // [-1,1]
+    float norm_pitch = ((float)(-packet.pitch - MIN_INT16) / (32767.5)) - 1.0; // [-1,1]
     float norm_roll = ((float)(-packet.roll - MIN_INT16) / (32767.5)) - 1.0;  // [-1,1]
     float norm_yaw = ((float)(packet.yaw - MIN_INT16) / (32767.5)) - 1.0;     // [-1,1]
     norm_throttle *= MAX_THROTTLE;
@@ -226,9 +229,17 @@ void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
     // usartWriteString("    \r");
 
     // Upadte PID controllers
-    float roll_correction = updatePID(roll_pid, norm_roll, angles.x);    // Roll
+    float roll_correction = updatePID(roll_pid, norm_roll, angles.x); // Roll
+    if (roll_correction > -1 && roll_correction < 1)
+    {
+        roll_correction = 0;
+    }
     float pitch_correction = updatePID(pitch_pid, norm_pitch, angles.y); // Pitch
-    float yaw_correction = updatePID(yaw_pid, norm_yaw, angles.z);       // Yaw
+    if (pitch_correction > -1 && pitch_correction < 1)
+    {
+        pitch_correction = 0;
+    }
+    float yaw_correction = updatePID(yaw_pid, norm_yaw, angles.z); // Yaw
 
     // usartWriteString("  rc: ");
     // usartWriteNumber((int32_t)roll_correction);
@@ -239,17 +250,17 @@ void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
     // usartWriteString("    \r");
 
     // Mix the values
-    // float m1 = norm_throttle + PITCH_GAIN * norm_pitch - ROLL_GAIN * norm_roll - YAW_GAIN * norm_yaw;
-    // float m2 = norm_throttle + PITCH_GAIN * norm_pitch + ROLL_GAIN * norm_roll + YAW_GAIN * norm_yaw;
-    // float m3 = norm_throttle - PITCH_GAIN * norm_pitch - ROLL_GAIN * norm_roll + YAW_GAIN * norm_yaw;
-    // float m4 = norm_throttle - PITCH_GAIN * norm_pitch + ROLL_GAIN * norm_roll - YAW_GAIN * norm_yaw;
+    // float m1 = norm_throttle + PITCH_GAIN * pitch_correction - ROLL_GAIN * roll_correction - YAW_GAIN * yaw_correction;
+    // float m2 = norm_throttle + PITCH_GAIN * pitch_correction + ROLL_GAIN * roll_correction + YAW_GAIN * yaw_correction;
+    // float m3 = norm_throttle - PITCH_GAIN * pitch_correction - ROLL_GAIN * roll_correction + YAW_GAIN * yaw_correction;
+    // float m4 = norm_throttle - PITCH_GAIN * pitch_correction + ROLL_GAIN * roll_correction - YAW_GAIN * yaw_correction;
 
     float m1 = norm_throttle + pitch_correction - roll_correction - yaw_correction;
     float m2 = norm_throttle + pitch_correction + roll_correction + yaw_correction;
     float m3 = norm_throttle - pitch_correction - roll_correction + yaw_correction;
     float m4 = norm_throttle - pitch_correction + roll_correction - yaw_correction;
 
-    // Clamp mixed values to PWM range [0 - 90]
+    // Clamp mixed values to PWM range [Min Throttle - Max Throttle]
     duty_cycles->duty1 = (uint8_t)(clamp(m1, (float)MIN_THROTTLE, (float)MAX_THROTTLE));
     duty_cycles->duty2 = (uint8_t)(clamp(m2, (float)MIN_THROTTLE, (float)MAX_THROTTLE));
     duty_cycles->duty3 = (uint8_t)(clamp(m3, (float)MIN_THROTTLE, (float)MAX_THROTTLE));
@@ -263,14 +274,6 @@ void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
     // usartWriteNumber((int32_t)duty_cycles->duty3);
     // usartWriteString("  m4: ");
     // usartWriteNumber((int32_t)duty_cycles->duty4);
-    // usartWriteString("    \r");
-
-    // usartWriteString("  r: ");
-    // usartWriteNumber((int32_t)angles.x);
-    // usartWriteString("  p: ");
-    // usartWriteNumber((int32_t)angles.y);
-    // usartWriteString("  y: ");
-    // usartWriteNumber((int32_t)angles.z);
     // usartWriteString("    \r");
 
     return;
@@ -305,14 +308,15 @@ void logPacketDrop(void)
 void updateOrientation(int16_t *accel_data, int16_t *gyro_data)
 {
     // Convert gyro values to rad/s
-    float gx = gyro_data[0] * 0.0175f * RAD;
-    float gy = gyro_data[1] * 0.0175f * RAD;
-    float gz = gyro_data[2] * 0.0175f * RAD;
+    float gx = gyro_data[0] * 0.0152671756f * RAD;
+    float gy = gyro_data[1] * 0.0152671756f * RAD;
+    float gz = gyro_data[2] * 0.0152671756f * RAD;
 
     MadgwickAHRSupdateIMU(gx, gy, gz, (float)accel_data[0], (float)accel_data[1], (float)accel_data[2]);
 
     Quaterntion temp_q = getQuaternion();
     quaternionToEuler(temp_q, &angles);
+    angles.y*=-1;
 
     // usartWriteString("Roll ");
     // usartWriteNumber((int32_t)angles.x);
@@ -322,7 +326,7 @@ void updateOrientation(int16_t *accel_data, int16_t *gyro_data)
     // usartWriteString(" | ");
     // usartWriteString("Yaw ");
     // usartWriteNumber((int32_t)angles.z);
-    // usartWriteChar('\r');
+    // usartWriteString("   \r");
 
     return;
 }
@@ -435,8 +439,8 @@ int main(void)
             setImuFlag(0);
 
             // Get IMU data
-            getAccelData(IMU1, accel_data);
-            getGyroData(IMU1, gyro_data);
+            getAccelData(IMU2, accel_data);
+            getGyroData(IMU2, gyro_data);
 
             // Update quaternion estimation
             updateOrientation(accel_data, gyro_data);
@@ -459,6 +463,7 @@ int main(void)
                 {
                     // User has initiated power-up
                     motor_state = IDLE;
+                    onLED(GREEN_LED);
                 }
                 // Set speed motor output
                 setDuty(CH1, 0);
@@ -485,17 +490,30 @@ int main(void)
                 {
                     // User has initiated a power-down
                     motor_state = OFF;
+                    offLED(GREEN_LED);
+                }
+                else if (motor_state == OPERATING && packet.button == 5)
+                {
+                    // User has initiated a base power up
+                    MIN_THROTTLE += 10;
+                    MIN_THROTTLE = MIN_THROTTLE > MAX_THROTTLE ? MAX_THROTTLE : MIN_THROTTLE;
+                }
+                else if (motor_state == OPERATING && packet.button == 4)
+                {
+                    // User has initiated a power-down
+                    MIN_THROTTLE -= 10;
+                    MIN_THROTTLE = MIN_THROTTLE < 10 ? 10 : MIN_THROTTLE;
                 }
 
-                usartWriteString("  m1: ");
-                usartWriteNumber((int32_t)duty_cycles.duty1);
-                usartWriteString("  m2: ");
-                usartWriteNumber((int32_t)duty_cycles.duty2);
-                usartWriteString("  m3: ");
-                usartWriteNumber((int32_t)duty_cycles.duty3);
-                usartWriteString("  m4: ");
-                usartWriteNumber((int32_t)duty_cycles.duty4);
-                usartWriteString("    \r");
+                // usartWriteString("  m1: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty1);
+                // usartWriteString("  m2: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty2);
+                // usartWriteString("  m3: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty3);
+                // usartWriteString("  m4: ");
+                // usartWriteNumber((int32_t)duty_cycles.duty4);
+                // usartWriteString("    \r");
 
                 // Set speed motor output
                 setDuty(CH1, duty_cycles.duty1);

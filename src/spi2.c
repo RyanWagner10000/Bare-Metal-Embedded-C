@@ -51,6 +51,21 @@ void initSPI2(void)
     // Initialize CS Pin to high
     GPIOB->ODR |= SPI2_CS;
 
+    // Set output type to push-pull
+    GPIOB->OTYPER &= ~(1U << 13);
+    GPIOB->OTYPER &= ~(1U << 14);
+    GPIOB->OTYPER &= ~(1U << 15);
+
+    // Set high speed for SPI pins
+    GPIOB->OSPEEDR |= (3U << 26);
+    GPIOB->OSPEEDR |= (3U << 28);
+    GPIOB->OSPEEDR |= (3U << 30);
+
+    // No pull-up / pull-down
+    GPIOB->PUPDR &= ~(3U << 26);
+    GPIOB->PUPDR &= ~(3U << 28);
+    GPIOB->PUPDR &= ~(3U << 30);
+
     // Clear config to init
     SPI2->CR1 = 0x0000;
 
@@ -58,8 +73,8 @@ void initSPI2(void)
     SPI2->CR1 |= (3U << 3);
 
     // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
-    // SPI2->CR1 &= ~(3U << 0);
-    SPI2->CR1 |= (3U << 0);
+    SPI2->CR1 &= ~(3U << 0);
+    // SPI2->CR1 |= (3U << 0);
 
     // Enable FULL duplex
     // SPI2->CR1 &= ~(1U << 10);

@@ -71,7 +71,9 @@ void initSPI1(void)
     SPI1->CR1 = 0x0000;
 
     // Set clock to fPCLK/16 (BR = 011)
-    SPI1->CR1 |= (3U << 3); // Set BR = 011 = /16
+    // SPI1->CR1 |= (3U << 3); // Set BR = 011 = /16
+    // Set clock to fPCLK/4 (BR = 001)
+    SPI1->CR1 |= (1U << 3); // Set BR = 001 = /4
 
     // Set CPHA and CPOL to 1 (Mode 3) to determine behavior
     // SPI1->CR1 |= (3U << 0);
