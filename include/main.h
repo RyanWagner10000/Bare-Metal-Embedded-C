@@ -15,7 +15,8 @@
 #include "timer2_5.h"
 #include "timer8.h"
 #include "usart.h"
-#include "berryIMU.h"
+// #include "berryIMU.h"
+#include "ICM20948.h"
 #include "fpu.h"
 #include "timer6.h"
 #include "nrf24.h"
@@ -30,19 +31,19 @@
 
 // Maximum motor/control values
 #define MAX_THROTTLE 90 // Out of 100
-#define MIN_THROTTLE 10  // Out of 100
-#define MIN_ROLL -20    // Degrees
-#define MAX_ROLL 20     // Degrees
-#define MIN_PITCH -20   // Degrees
-#define MAX_PITCH 20    // Degrees
-#define MIN_YAW 0       // Degrees/sec
-#define MAX_YAW 5       // Degrees/sec
+// #define MIN_THROTTLE 10  // Out of 100
+#define MIN_ROLL -30  // Degrees
+#define MAX_ROLL 30   // Degrees
+#define MIN_PITCH -20 // Degrees
+#define MAX_PITCH 20  // Degrees
+#define MIN_YAW 0     // Degrees/sec
+#define MAX_YAW 10    // Degrees/sec
 #define MIN_INT16 -32768
 #define MAX_INT16 32767
 
 // Roll, Pitch, and Yaw gains for mixer
-#define PITCH_GAIN 0.3f
-#define ROLL_GAIN 0.3f
+#define PITCH_GAIN 0.8f
+#define ROLL_GAIN 0.8f
 #define YAW_GAIN 0.15f
 
 enum CONTROLLER_BUTTON
