@@ -66,6 +66,10 @@ void initPeripherals(void)
     enableFPU();
     usartWriteString("FPU sucessfully initializaed!\n");
 
+    // Enable DMA
+    initDMA();
+    usartWriteString("DMA sucessfully initializaed!\n");
+
     // Enable all the LED's
     initGreenLED();
     initOrangeLED();
@@ -171,16 +175,16 @@ void initModules(void)
     flashAllLED(FLASH_SUCCESS);
 }
 
-float updatePID(PID_Controller pid, float setpoint, float actual)
+float updatePID(PID_Controller *pid, float setpoint, float actual)
 {
-    pid.prev_error = pid.error;
-    pid.error = setpoint - actual;
+    pid->prev_error = pid->error;
+    pid->error = setpoint - actual;
 
-    float P = pid.Kp * pid.error;
-    pid.I += pid.Ki * pid.error * dt;
-    float D = pid.Kd * (pid.error - pid.prev_error) / dt;
+    float P = pid->Kp * pid->error;
+    pid->I += pid->Ki * pid->error * dt;
+    float D = pid->Kd * (pid->error - pid->prev_error) / dt;
 
-    return P + pid.I + D;
+    return P + pid->I + D;
 }
 
 /**
@@ -208,11 +212,10 @@ float clamp(float value, float low, float high)
 void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
 {
     // Normalize values: throttle [0, 1], roll, pitch, yaw [-1, 1]
-    // float norm_throttle = ((float)packet.throttle - (float)MIN_INT16) / 65535.0f; // [0, 1]
-    float norm_throttle = ((float)packet.throttle) / MAX_INT16;               // [0, 1]
-    float norm_pitch = ((float)(-packet.pitch - MIN_INT16) / (32767.5)) - 1.0; // [-1,1]
-    float norm_roll = ((float)(-packet.roll - MIN_INT16) / (32767.5)) - 1.0;  // [-1,1]
-    float norm_yaw = ((float)(packet.yaw - MIN_INT16) / (32767.5)) - 1.0;     // [-1,1]
+    float norm_throttle = ((float)packet.throttle - (float)MIN_INT16) / 65535.0f;               // [0, 1]
+    float norm_pitch = ((float)(-packet.pitch - (float)MIN_INT16) / (32767.5)) - 1.0; // [-1,1]
+    float norm_roll = ((float)(-packet.roll - (float)MIN_INT16) / (32767.5)) - 1.0;  // [-1,1]
+    float norm_yaw = ((float)(packet.yaw - (float)MIN_INT16) / (32767.5)) - 1.0;     // [-1,1]
     norm_throttle *= MAX_THROTTLE;
     norm_pitch *= MAX_PITCH;
     norm_roll *= MAX_ROLL;
@@ -229,17 +232,17 @@ void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
     // usartWriteString("    \r");
 
     // Upadte PID controllers
-    float roll_correction = updatePID(roll_pid, norm_roll, angles.x); // Roll
-    if (roll_correction > -1 && roll_correction < 1)
-    {
-        roll_correction = 0;
-    }
-    float pitch_correction = updatePID(pitch_pid, norm_pitch, angles.y); // Pitch
-    if (pitch_correction > -1 && pitch_correction < 1)
-    {
-        pitch_correction = 0;
-    }
-    float yaw_correction = updatePID(yaw_pid, norm_yaw, angles.z); // Yaw
+    float roll_correction = updatePID(&roll_pid, norm_roll, angles.x); // Roll
+    // if (roll_correction > -1 && roll_correction < 1)
+    // {
+    //     roll_correction = 0;
+    // }
+    float pitch_correction = updatePID(&pitch_pid, norm_pitch, angles.y); // Pitch
+    // if (pitch_correction > -1 && pitch_correction < 1)
+    // {
+    //     pitch_correction = 0;
+    // }
+    float yaw_correction = updatePID(&yaw_pid, norm_yaw, angles.z); // Yaw
 
     // usartWriteString("  rc: ");
     // usartWriteNumber((int32_t)roll_correction);

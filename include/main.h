@@ -21,6 +21,7 @@
 #include "timer6.h"
 #include "nrf24.h"
 #include "MadgwickAHRS.h"
+#include "dma.h"
 
 // RF Channel for the Radio
 #define RX_P0_CHANNEL 0

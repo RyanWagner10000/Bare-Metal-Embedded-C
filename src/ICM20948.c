@@ -292,7 +292,7 @@ uint8_t initGyroscope(uint8_t imu_num)
     // }
 
     // Change bank to 0
-    writeRegisterSingle(imu_num, REG_BANK_SEL, BANK_ONE);
+    writeRegisterSingle(imu_num, REG_BANK_SEL, BANK_ZERO);
 
     return success;
 }
@@ -404,7 +404,7 @@ uint8_t initIMU(uint8_t imu_num)
     success = initAccelerometer(imu_num);
 
     // ########## Gyroscope ##########
-    // success = initGyroscope(imu_num);
+    success = initGyroscope(imu_num);
 
     // ########## Magnetometer ##########
     // initMagnetometer(imu_num);
