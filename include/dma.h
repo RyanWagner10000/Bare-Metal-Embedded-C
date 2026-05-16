@@ -12,7 +12,10 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "spi1.h"
-#include "spi3.h"
+#include "spi2.h"
+// #include "spi3.h"
+#include "nvic.h"
+#include "ICM20948.h"
 
 #define DMA1_BASE 0x40026000
 #define DMA2_BASE 0x40026400
@@ -77,5 +80,13 @@ typedef struct
 } DMA_TypeDef;
 
 void initDMA(void);
+void initDMA_SPI1(void);
+void initDMA_SPI2(void);
+void imuDMATransfer(uint8_t imu_num);
+uint8_t getIMUDataReady(uint8_t imu_num);
+void setIMUDataReady(uint8_t imu_num, uint8_t value);
+void swapBuffers(void);
+void getXLDataBuffer(int16_t *accel_data);
+void getGyroDataBuffer(int16_t *gyro_data);
 
 #endif // DMA_H

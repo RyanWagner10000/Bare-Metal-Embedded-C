@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "rcc.h"
 #include "gpio.h"
+#include "nvic.h"
 
 #define SPI2_BASE 0x40003800
 #define SPI2_EN (1U << 14)
@@ -21,6 +22,8 @@
 #define BUSY (1U << 7)
 
 #define SPI2 ((SPI2_TypeDef *)(SPI2_BASE))
+
+#define __NOP() __asm__ __volatile__ ("nop")
 
 typedef struct
 {

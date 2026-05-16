@@ -389,22 +389,22 @@ uint8_t initIMU(uint8_t imu_num)
     uint8_t pwr_mgmt_2 = 0x00;
 
     // Reset ICM 20948
-    writeRegisterSingle(imu_num, PWR_MGMT_1, 0x80);
+    // writeRegisterSingle(imu_num, PWR_MGMT_1, 0x80);
 
     // Set to auto sense best clock source
     writeRegisterSingle(imu_num, PWR_MGMT_1, pwr_mgmt_1);
-    test = readRegisterSingle(imu_num, PWR_MGMT_1);
-    if (test != pwr_mgmt_1)
-    {
-        success = 0;
-    }
-    test = 0xFF;
 
     // ########## Accelerometer ##########
     success = initAccelerometer(imu_num);
+    // usartWriteString("initAccelerometer = ");
+    // usartWriteNumber((int32_t)success);
+    // usartWriteChar('\n');
 
     // ########## Gyroscope ##########
     success = initGyroscope(imu_num);
+    // usartWriteString("initGyroscope = ");
+    // usartWriteNumber((int32_t)success);
+    // usartWriteChar('\n');
 
     // ########## Magnetometer ##########
     // initMagnetometer(imu_num);
@@ -416,6 +416,9 @@ uint8_t initIMU(uint8_t imu_num)
     {
         success = 0;
     }
+    // usartWriteString("PWR_MGMT_2 = ");
+    // usartWriteNumber((int32_t)success);
+    // usartWriteChar('\n');
 
     // Change bank to 0
     writeRegisterSingle(imu_num, REG_BANK_SEL, BANK_ZERO);

@@ -72,6 +72,7 @@ void initSPI1(void)
 
     // Set clock to fPCLK/16 (BR = 011)
     // SPI1->CR1 |= (3U << 3); // Set BR = 011 = /16
+
     // Set clock to fPCLK/4 (BR = 001)
     SPI1->CR1 |= (1U << 3); // Set BR = 001 = /4
 
@@ -92,12 +93,27 @@ void initSPI1(void)
     SPI1->CR1 |= (1U << 9); // SSM
     SPI1->CR1 |= (1U << 8); // SSI
 
+    // Enable Tx and Rx DMA
+    SPI1->CR2 |= (3U << 0);
+
+    // Enable ISR
+    NVIC_EnableIRQ(SPI1_IRQn);
+
     // Turn on SPI1
     SPI1->CR1 |= (1U << 6);
 
     return;
 }
 
+/**
+ * @brief Transfer and recieve 1+ uint8 values to device
+ *
+ * @param tx_buffer Array of 8-bit values to transmit
+ * @param rx_buffer Array of 8-bit values received
+ * @param length Length of tx and rx buffer arrays
+ *
+ * @return None
+ */
 void transferSPI1(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
 {
     uint8_t i = 0;
@@ -106,14 +122,14 @@ void transferSPI1(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
         // Wait until TXE is set
         while (!(SPI1->SR & TXE))
             ;
-        
+
         // Write data to register
         SPI1->DR = tx_buffer[i];
 
         // Wait for RXNE to be set
         while (!(SPI1->SR & RXNE))
             ;
-        
+
         // Read data from register
         rx_buffer[i] = (SPI1->DR) & 0xFF;
 
@@ -123,7 +139,7 @@ void transferSPI1(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
     // Wait for BUSY flag to reset
     while ((SPI1->SR & BUSY))
         ;
-    
+
     // Drain the RX buffer of the junk byte clocked in during TX
     while (SPI1->SR & (1U << 0))
     {

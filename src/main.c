@@ -53,64 +53,6 @@ void flashAllLED(uint32_t delay)
  *
  * @return None
  *
- * @note Flashes all LED's 1 time upon success
- */
-void initPeripherals(void)
-{
-    // Enable USART for testing
-    initUSART2();
-    usartWriteString("Testing USART Connection!\n");
-
-    // Enable Floating Point Unit
-    enableFaults();
-    enableFPU();
-    usartWriteString("FPU sucessfully initializaed!\n");
-
-    // Enable DMA
-    initDMA();
-    usartWriteString("DMA sucessfully initializaed!\n");
-
-    // Enable all the LED's
-    initGreenLED();
-    initOrangeLED();
-    initRedLED();
-    initBlueLED();
-    usartWriteString("LED's sucessfully initializaed!\n");
-
-    // Enable all the timers
-    initTimer2();
-    usartWriteString("Timer2 sucessfully initializaed!\n");
-    initTimer5();
-    usartWriteString("Timer5 sucessfully initializaed!\n");
-    initTimer6();
-    usartWriteString("Timer6 sucessfully initializaed!\n");
-    initTimer8();
-    usartWriteString("Timer8 sucessfully initializaed!\n");
-
-    // Enable the push button on the board
-    // initPushButton();
-
-    // Enable SPI buses for IMU and Radio
-    initSPI1();
-    usartWriteString("SPI1 successfully initialized!\n");
-    initSPI2();
-    usartWriteString("SPI2 successfully initialized!\n");
-    initSPI3();
-    usartWriteString("SPI3 successfully initialized!\n");
-
-    // Show success
-    flashAllLED(FLASH_SUCCESS);
-
-    return;
-}
-
-/**
- * @brief Initiate all peripherals for the system
- *
- * @param None
- *
- * @return None
- *
  * @note Flashes all LED's 1 time upon success, flashes faster continuously if failed
  */
 void initModules(void)
@@ -175,6 +117,71 @@ void initModules(void)
     flashAllLED(FLASH_SUCCESS);
 }
 
+/**
+ * @brief Initiate all peripherals for the system
+ *
+ * @param None
+ *
+ * @return None
+ *
+ * @note Flashes all LED's 1 time upon success
+ */
+void initPeripherals(void)
+{
+    // Enable USART for testing
+    initUSART2();
+    usartWriteString("Testing USART Connection!\n");
+
+    // Enable Floating Point Unit
+    enableFaults();
+    enableFPU();
+    usartWriteString("FPU sucessfully initializaed!\n");
+
+    // Enable all the LED's
+    initGreenLED();
+    initOrangeLED();
+    initRedLED();
+    initBlueLED();
+    usartWriteString("LED's sucessfully initializaed!\n");
+
+    // Enable all the timers
+    initTimer2();
+    usartWriteString("Timer2 sucessfully initializaed!\n");
+    initTimer5();
+    usartWriteString("Timer5 sucessfully initializaed!\n");
+    initTimer6();
+    usartWriteString("Timer6 sucessfully initializaed!\n");
+    initTimer8();
+    usartWriteString("Timer8 sucessfully initializaed!\n");
+
+    // Enable the push button on the board
+    // initPushButton();
+
+    // Enable SPI buses for IMU and Radio
+    // initSPI1();
+    // usartWriteString("SPI1 successfully initialized!\n");
+    initSPI2();
+    usartWriteString("SPI2 successfully initialized!\n");
+    initSPI3();
+    usartWriteString("SPI3 successfully initialized!\n");
+
+    // Init all modules
+    initModules();
+
+    // Enable DMA
+    initDMA();
+    usartWriteString("DMA sucessfully initialized!\n");
+    // initDMA_SPI1();
+    // usartWriteString("DMA for SPI1 sucessfully initialized!\n");
+    initDMA_SPI2();
+    usartWriteString("DMA for SPI2 sucessfully initialized!\n");
+
+    // Show success
+    flashAllLED(FLASH_SUCCESS);
+
+    return;
+}
+
 float updatePID(PID_Controller *pid, float setpoint, float actual)
 {
     pid->prev_error = pid->error;
@@ -212,10 +219,10 @@ float clamp(float value, float low, float high)
 void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
 {
     // Normalize values: throttle [0, 1], roll, pitch, yaw [-1, 1]
-    float norm_throttle = ((float)packet.throttle - (float)MIN_INT16) / 65535.0f;               // [0, 1]
+    float norm_throttle = ((float)packet.throttle - (float)MIN_INT16) / 65535.0f;     // [0, 1]
     float norm_pitch = ((float)(-packet.pitch - (float)MIN_INT16) / (32767.5)) - 1.0; // [-1,1]
-    float norm_roll = ((float)(-packet.roll - (float)MIN_INT16) / (32767.5)) - 1.0;  // [-1,1]
-    float norm_yaw = ((float)(packet.yaw - (float)MIN_INT16) / (32767.5)) - 1.0;     // [-1,1]
+    float norm_roll = ((float)(-packet.roll - (float)MIN_INT16) / (32767.5)) - 1.0;   // [-1,1]
+    float norm_yaw = ((float)(packet.yaw - (float)MIN_INT16) / (32767.5)) - 1.0;      // [-1,1]
     norm_throttle *= MAX_THROTTLE;
     norm_pitch *= MAX_PITCH;
     norm_roll *= MAX_ROLL;
@@ -291,9 +298,9 @@ void calculateMotorDuty(RadioPacket packet, DutyCycles *duty_cycles)
  */
 void logPacketDrop(void)
 {
-    usartWriteString("Received Packets: ");
-    usartWriteNumber(packets_received);
-    usartWriteChar('\n');
+    // usartWriteString("Received Packets: ");
+    // usartWriteNumber(packets_received);
+    // usartWriteChar('\n');
     packets_received = 0;
     return;
 }
@@ -319,7 +326,7 @@ void updateOrientation(int16_t *accel_data, int16_t *gyro_data)
 
     Quaterntion temp_q = getQuaternion();
     quaternionToEuler(temp_q, &angles);
-    angles.y*=-1;
+    angles.y *= -1;
 
     // usartWriteString("Roll ");
     // usartWriteNumber((int32_t)angles.x);
@@ -344,7 +351,7 @@ void updateOrientation(int16_t *accel_data, int16_t *gyro_data)
 int main(void)
 {
     initPeripherals();
-    initModules();
+    // initModules();
 
     // Get and set inital state
     // uint32_t button_state = getButtonState();
@@ -443,7 +450,34 @@ int main(void)
 
             // Get IMU data
             getAccelData(IMU2, accel_data);
-            getGyroData(IMU2, gyro_data);
+            // getGyroData(IMU2, gyro_data);
+            if (getIMUDataReady(IMU2))
+            {
+                setIMUDataReady(IMU2, 0);
+
+                // getXLDataBuffer(accel_data);
+
+                // getGyroDataBuffer(gyro_data);
+                // usartWriteString("X ");
+                // usartWriteNumber((int32_t)accel_data[0]);
+                // usartWriteString(" | ");
+                // usartWriteString("Y ");
+                // usartWriteNumber((int32_t)accel_data[1]);
+                // usartWriteString(" | ");
+                // usartWriteString("Z ");
+                // usartWriteNumber((int32_t)accel_data[2]);
+                // usartWriteString("   \r");
+            }
+
+            usartWriteString("X ");
+            usartWriteNumber((int32_t)accel_data[0]);
+            usartWriteString(" | ");
+            usartWriteString("Y ");
+            usartWriteNumber((int32_t)accel_data[1]);
+            usartWriteString(" | ");
+            usartWriteString("Z ");
+            usartWriteNumber((int32_t)accel_data[2]);
+            usartWriteString("   \r");
 
             // Update quaternion estimation
             updateOrientation(accel_data, gyro_data);

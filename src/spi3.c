@@ -100,6 +100,15 @@ void initSPI3(void)
     return;
 }
 
+/**
+ * @brief Transfer and recieve 1+ uint8 values to device
+ *
+ * @param tx_buffer Array of 8-bit values to transmit
+ * @param rx_buffer Array of 8-bit values received
+ * @param length Length of tx and rx buffer arrays
+ *
+ * @return None
+ */
 void transferSPI3(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
 {
     uint8_t i = 0;

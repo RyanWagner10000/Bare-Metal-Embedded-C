@@ -52,6 +52,7 @@ void initSPI2(void)
     GPIOB->ODR |= SPI2_CS;
 
     // Set output type to push-pull
+    GPIOB->OTYPER &= ~(1U << 12);
     GPIOB->OTYPER &= ~(1U << 13);
     GPIOB->OTYPER &= ~(1U << 14);
     GPIOB->OTYPER &= ~(1U << 15);
@@ -70,11 +71,14 @@ void initSPI2(void)
     SPI2->CR1 = 0x0000;
 
     // Set clock to fPCLK/16 (BR = 011)
-    SPI2->CR1 |= (3U << 3);
+    // SPI2->CR1 |= (3U << 3);
+
+    // Set clock to fPCLK/4 (BR = 001)
+    SPI2->CR1 |= (1U << 3); // Set BR = 001 = /4
 
     // Set CPHA and CPOL to 0 (Mode 0) to determine behavior
-    SPI2->CR1 &= ~(3U << 0);
-    // SPI2->CR1 |= (3U << 0);
+    SPI2->CR1 |= (3U << 0);
+    // SPI2->CR1 &= ~(3U << 0);
 
     // Enable FULL duplex
     // SPI2->CR1 &= ~(1U << 10);
@@ -89,12 +93,28 @@ void initSPI2(void)
     SPI2->CR1 |= (1U << 9); // SSM
     SPI2->CR1 |= (1U << 8); // SSI
 
+    // Enable Tx and Rx DMA
+    // SPI2->CR2 |= (3U << 0);
+
+    // Enable ISR
+    // NVIC_SetPriority(SPI2_IRQn, 1);
+    // NVIC_EnableIRQ(SPI2_IRQn);
+
     // Turn on SPI2
     SPI2->CR1 |= (1U << 6);
 
     return;
 }
 
+/**
+ * @brief Transfer and recieve 1+ uint8 values to device
+ *
+ * @param tx_buffer Array of 8-bit values to transmit
+ * @param rx_buffer Array of 8-bit values received
+ * @param length Length of tx and rx buffer arrays
+ *
+ * @return None
+ */
 void transferSPI2(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
 {
     uint8_t i = 0;
@@ -103,14 +123,14 @@ void transferSPI2(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
         // Wait until TXE is set
         while (!(SPI2->SR & TXE))
             ;
-        
+
         // Write data to register
         SPI2->DR = tx_buffer[i];
 
         // Wait for RXNE to be set
         while (!(SPI2->SR & RXNE))
             ;
-        
+
         // Read data from register
         rx_buffer[i] = (SPI2->DR) & 0xFF;
 
@@ -120,7 +140,7 @@ void transferSPI2(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t length)
     // Wait for BUSY flag to reset
     while ((SPI2->SR & BUSY))
         ;
-    
+
     // Drain the RX buffer of the junk byte clocked in during TX
     while (SPI2->SR & (1U << 0))
     {
@@ -143,8 +163,9 @@ void enableCS_SPI2(void)
 {
     // Turn on SPI to device
     GPIOB->ODR &= ~(SPI2_CS);
+
     // Small delay
-    for (volatile uint32_t i = 0; i < 10000; i++)
+    for (volatile uint32_t i = 0; i < 75; i++)
         ;
 
     return;
@@ -161,8 +182,9 @@ void disableCS_SPI2(void)
 {
     // Turn off SPI to device
     GPIOB->ODR |= SPI2_CS;
+
     // Small delay
-    for (volatile uint32_t i = 0; i < 10000; i++)
+    for (volatile uint32_t i = 0; i < 75; i++)
         ;
 
     return;
